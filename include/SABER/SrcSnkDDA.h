@@ -35,6 +35,8 @@
 #include "SABER/ProgSlice.h"
 #include "SABER/SaberSVFGBuilder.h"
 #include "WPA/Andersen.h"
+#include <llvm/Support/Debug.h>
+#include <time.h>
 
 typedef CFLSolver<SVFG*,CxtDPItem> CFLSrcSnkSolver;
 
@@ -87,6 +89,10 @@ public:
 
     /// Initialize analysis
     virtual void initialize(llvm::Module& module) {
+        llvm::errs() << "==---------Start Pre-analysis---------==\n";
+        time_t StartTime;
+        time(&StartTime);
+
         ptaCallGraph = new PTACallGraph(&module);
         AndersenWaveDiff* ander = AndersenWaveDiff::createAndersenWaveDiff(module);
         svfg =  memSSA.buildSVFG(ander);
@@ -97,6 +103,12 @@ public:
 
         initSrcs();
         initSnks();
+
+        time_t CurrTime;
+        time(&CurrTime);
+
+        double TimeElapsed = difftime(CurrTime, StartTime);
+        llvm::errs() << "Pre-analysis: " << TimeElapsed << "s\n";
     }
 
     /// Finalize analysis
