@@ -9,7 +9,7 @@ LLVM_OBJ_ROOT="/home/ysui/llvm-3.8.0/llvm-3.8.0.obj"
 
 dnl Tell autoconf that the auxilliary files are actually located in
 dnl the LLVM autoconf directory, not here.
-AC_CONFIG_AUX_DIR($LLVM_SRC_ROOT/autoconf)
+AC_CONFIG_AUX_DIR(autoconf)
 
 dnl Tell autoconf that this is an LLVM project being configured
 dnl This provides the --with-llvmsrc and --with-llvmobj options

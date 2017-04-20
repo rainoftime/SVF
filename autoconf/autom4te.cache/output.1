@@ -1676,11 +1676,11 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-LLVM_SRC_ROOT="/home/pta/llvm-3.5.0/llvm-3.5.0.src"
-LLVM_OBJ_ROOT="/home/pta/llvm-3.5.0/llvm-3.5.0.obj"
+LLVM_SRC_ROOT="/home/ysui/llvm-3.8.0/llvm-3.8.0.src"
+LLVM_OBJ_ROOT="/home/ysui/llvm-3.8.0/llvm-3.8.0.obj"
 
 ac_aux_dir=
-for ac_dir in $LLVM_SRC_ROOT/autoconf "$srcdir"/$LLVM_SRC_ROOT/autoconf; do
+for ac_dir in autoconf "$srcdir"/autoconf; do
   if test -f "$ac_dir/install-sh"; then
     ac_aux_dir=$ac_dir
     ac_install_sh="$ac_aux_dir/install-sh -c"
@@ -1696,7 +1696,7 @@ for ac_dir in $LLVM_SRC_ROOT/autoconf "$srcdir"/$LLVM_SRC_ROOT/autoconf; do
   fi
 done
 if test -z "$ac_aux_dir"; then
-  as_fn_error $? "cannot find install-sh, install.sh, or shtool in $LLVM_SRC_ROOT/autoconf \"$srcdir\"/$LLVM_SRC_ROOT/autoconf" "$LINENO" 5
+  as_fn_error $? "cannot find install-sh, install.sh, or shtool in autoconf \"$srcdir\"/autoconf" "$LINENO" 5
 fi
 
 # These three variables are undocumented and unsupported,

@@ -120,7 +120,11 @@ public:
         releaseMemory();
         llvm::DominatorTree dt;
         dt.recalculate(fun);
+#ifdef LLVM38
         analyze(dt);
+#else
+        getBase().Analyze(dt);
+#endif
         return false;
     }
 };

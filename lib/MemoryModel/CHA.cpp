@@ -604,7 +604,7 @@ void CHGraph::analyzeVTables(const Module &M) {
             E = M.global_end(); I != E; ++I) {
         const GlobalValue *globalvalue = dyn_cast<const GlobalValue>(I);
         if (isValVtbl(globalvalue)) {
-            if (isa<ArrayType>(globalvalue->getValueType()) &&
+            if (isa<ArrayType>(globalvalue->getOperand(0)->getType()) &&
                     globalvalue->getNumOperands() > 0) {
 
                 string vtblClassName = getClassNameFromVtblVal(globalvalue);
@@ -951,8 +951,13 @@ void CHGraph::getCSVFns(CallSite cs, set<Value*> &virtualFunctions) const {
         for (set<const Function*>::const_iterator fit = vfns.begin(),
                 feit = vfns.end(); fit != feit; ++fit) {
             const Function* callee = *fit;
+
+            bool isVarArg = false;
+            if (FunctionType* FT = dyn_cast<FunctionType>(cs.getCalledValue()->getType())) {
+                isVarArg = FT->isVarArg();
+            }
             if (cs.arg_size() == callee->arg_size() ||
-                    (cs.getFunctionType()->isVarArg() && callee->isVarArg())) {
+                    (isVarArg && callee->isVarArg())) {
                 cppUtil::DemangledName dname =
                     cppUtil::demangle(callee->getName().str());
                 string calleeName = dname.funcName;
@@ -1059,8 +1064,12 @@ void CHGraph::getVFnsFromVtbls(llvm::CallSite cs,
             const Function* callee = *fit;
             //if(cs.arg_size() != callee->arg_size())
             //  continue;
+            bool isVarArg = false;
+            if (FunctionType* FT = dyn_cast<FunctionType>(cs.getCalledValue()->getType())) {
+                isVarArg = FT->isVarArg();
+            }
             if (cs.arg_size() == callee->arg_size() ||
-                    (cs.getFunctionType()->isVarArg() && callee->isVarArg())) {
+                    (isVarArg && callee->isVarArg())) {
                 cppUtil::DemangledName dname =
                     cppUtil::demangle(callee->getName().str());
                 string calleeName = dname.funcName;

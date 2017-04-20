@@ -256,12 +256,23 @@ std::string analysisUtil::getSourceLocOfFunction(const llvm::Function *F)
     NamedMDNode* CU_Nodes = F->getParent()->getNamedMetadata("llvm.dbg.cu");
     if(CU_Nodes) {
         for (unsigned i = 0, e = CU_Nodes->getNumOperands(); i != e; ++i) {
+#ifdef LLVM38
             DICompileUnit *CUNode = cast<DICompileUnit>(CU_Nodes->getOperand(i));
             for (DISubprogram *SP : CUNode->getSubprograms()) {
                 if (SP->describes(F))
                     rawstr << "in line: " << SP->getLine()
                            << " file: " << SP->getFilename();
             }
+#else
+            DICompileUnit CUNode(CU_Nodes->getOperand(i));
+            DIArray SPs = CUNode.getSubprograms();
+            for (unsigned j = 0, je = SPs.getNumElements(); j != je; ++j) {
+                DISubprogram SP(SPs.getElement(j));
+                if (SP.describes(F))
+                    rawstr << "in line: " << SP.getLineNumber()
+                           << " file: " << SP.getFilename();
+            }
+#endif
         }
     }
     return rawstr.str();
@@ -279,14 +290,25 @@ std::string analysisUtil::getSourceLoc(const Value* val) {
         if (isa<AllocaInst>(inst)) {
             DbgDeclareInst* DDI = llvm::FindAllocaDbgDeclare(const_cast<Instruction*>(inst));
             if (DDI) {
+#ifdef LLVM38
                 DIVariable *DIVar = cast<DIVariable>(DDI->getVariable());
                 rawstr << "ln: " << DIVar->getLine() << " fl: " << DIVar->getFilename();
+#else
+                DIVariable DIVar(DDI->getVariable());
+                rawstr << "ln: " << DIVar.getLineNumber() << " fl: " << DIVar.getFile().getFilename();
+#endif
             }
         }
         else if (MDNode *N = inst->getMetadata("dbg")) { // Here I is an LLVM instruction
+#ifdef LLVM38
             DILocation* Loc = cast<DILocation>(N);                   // DILocation is in DebugInfo.h
             unsigned Line = Loc->getLine();
             StringRef File = Loc->getFilename();
+#else
+            DILocation Loc(N);
+            unsigned Line = Loc.getLineNumber();
+            StringRef File = Loc.getFilename();
+#endif
             //StringRef Dir = Loc.getDirectory();
             rawstr << "ln: " << Line << " fl: " << File;
         }
@@ -308,11 +330,22 @@ std::string analysisUtil::getSourceLoc(const Value* val) {
         NamedMDNode* CU_Nodes = gvar->getParent()->getNamedMetadata("llvm.dbg.cu");
         if(CU_Nodes) {
             for (unsigned i = 0, e = CU_Nodes->getNumOperands(); i != e; ++i) {
+#ifdef LLVM38
                 DICompileUnit *CUNode = cast<DICompileUnit>(CU_Nodes->getOperand(i));
                 for (DIGlobalVariable *GV : CUNode->getGlobalVariables()) {
                     if (gvar == GV->getVariable())
                         rawstr << "ln: " << GV->getLine() << " fl: " << GV->getFilename();
                 }
+#else
+                DICompileUnit CUNode(CU_Nodes->getOperand(i));
+                DIArray GVs = CUNode.getGlobalVariables();
+                for (unsigned j = 0, je = GVs.getNumElements(); j != je; ++j) {
+                    DIGlobalVariable GV(GVs.getElement(j));
+                    if (gvar == GV.getGlobal()) {
+                        rawstr << "ln: " << GV.getLineNumber() << " fl: " << GV.getFilename();
+                    }
+                }
+#endif
             }
         }
     }

@@ -130,6 +130,7 @@ convertGEP (ConstantExpr * CE, Instruction * InsertPt) {
     ++GEPChanges;
 
 
+#ifdef LLVM38
     //
     // Make the new GEP instruction.
     //
@@ -137,6 +138,12 @@ convertGEP (ConstantExpr * CE, Instruction * InsertPt) {
                                        arrayIdices,
                                        CE->getName(),
                                        InsertPt));
+#else
+    return (GetElementPtrInst::Create(CE->getOperand(0),
+                                           arrayIdices,
+                                           CE->getName(),
+                                           InsertPt));
+#endif
 }
 
 //

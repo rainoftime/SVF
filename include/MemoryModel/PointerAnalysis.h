@@ -187,15 +187,15 @@ public:
     virtual void computeDDAPts(NodeID id) {}
 
     /// Interface exposed to users of our pointer analysis, given Location infos
-    virtual llvm::AliasResult alias(const llvm::MemoryLocation &LocA,
-                                    const llvm::MemoryLocation &LocB) = 0;
+    virtual AliasAnalysis::AliasResult alias(const AliasAnalysis::Location &LocA,
+                                    const AliasAnalysis::Location &LocB) = 0;
 
     /// Interface exposed to users of our pointer analysis, given Value infos
-    virtual llvm::AliasResult alias(const llvm::Value* V1,
+    virtual AliasAnalysis::AliasResult alias(const llvm::Value* V1,
                                     const llvm::Value* V2) = 0;
 
     /// Interface exposed to users of our pointer analysis, given PAGNodeID
-    virtual llvm::AliasResult alias(NodeID node1, NodeID node2) = 0;
+    virtual AliasAnalysis::AliasResult alias(NodeID node1, NodeID node2) = 0;
 
 protected:
     /// Return all indirect callsites
@@ -483,18 +483,18 @@ private:
 
 public:
     /// Interface expose to users of our pointer analysis, given Location infos
-    virtual llvm::AliasResult alias(const llvm::MemoryLocation  &LocA,
-                                    const llvm::MemoryLocation  &LocB);
+    virtual AliasAnalysis::AliasResult alias(const AliasAnalysis::Location &LocA,
+                                    const AliasAnalysis::Location &LocB);
 
     /// Interface expose to users of our pointer analysis, given Value infos
-    virtual llvm::AliasResult alias(const llvm::Value* V1,
+    virtual AliasAnalysis::AliasResult alias(const llvm::Value* V1,
                                     const llvm::Value* V2);
 
     /// Interface expose to users of our pointer analysis, given PAGNodeID
-    virtual llvm::AliasResult alias(NodeID node1, NodeID node2);
+    virtual AliasAnalysis::AliasResult alias(NodeID node1, NodeID node2);
 
     /// Interface expose to users of our pointer analysis, given two pts
-    virtual llvm::AliasResult alias(const PointsTo& pts1, const PointsTo& pts2);
+    virtual AliasAnalysis::AliasResult alias(const PointsTo& pts1, const PointsTo& pts2);
 
     /// dump and debug, print out conditional pts
     //@{
@@ -696,37 +696,37 @@ public:
     }
 
     /// Interface expose to users of our pointer analysis, given Location infos
-    virtual inline llvm::AliasResult alias(const llvm::MemoryLocation &LocA,
-                                           const llvm::MemoryLocation  &LocB) {
+    virtual inline AliasAnalysis::AliasResult alias(const AliasAnalysis::Location &LocA,
+                                           const AliasAnalysis::Location &LocB) {
         return alias(LocA.Ptr, LocB.Ptr);
     }
     /// Interface expose to users of our pointer analysis, given Value infos
-    virtual inline llvm::AliasResult alias(const llvm::Value* V1, const llvm::Value* V2) {
+    virtual inline AliasAnalysis::AliasResult alias(const llvm::Value* V1, const llvm::Value* V2) {
         return  alias(pag->getValueNode(V1),pag->getValueNode(V2));
     }
     /// Interface expose to users of our pointer analysis, given two pointers
-    virtual inline llvm::AliasResult alias(NodeID node1, NodeID node2) {
+    virtual inline AliasAnalysis::AliasResult alias(NodeID node1, NodeID node2) {
         return alias(getCondPointsTo(node1),getCondPointsTo(node2));
     }
     /// Interface expose to users of our pointer analysis, given conditional variables
-    virtual llvm::AliasResult alias(const CVar& var1, const CVar& var2) {
+    virtual AliasAnalysis::AliasResult alias(const CVar& var1, const CVar& var2) {
         return alias(getPts(var1),getPts(var2));
     }
     /// Interface expose to users of our pointer analysis, given two conditional points-to sets
-    virtual inline llvm::AliasResult alias(const CPtSet& pts1, const CPtSet& pts2) {
+    virtual inline AliasAnalysis::AliasResult alias(const CPtSet& pts1, const CPtSet& pts2) {
         CPtSet cpts1;
         expandFIObjs(pts1,cpts1);
         CPtSet cpts2;
         expandFIObjs(pts2,cpts2);
         if (containBlackHoleNode(cpts1) || containBlackHoleNode(cpts2))
-            return llvm::MayAlias;
+            return AliasAnalysis::MayAlias;
         else if(this->getAnalysisTy()==PathS_DDA && contains(cpts1,cpts2) && contains(cpts2,cpts1)) {
-            return llvm::MustAlias;
+            return AliasAnalysis::MustAlias;
         }
         else if(overlap(cpts1,cpts2))
-            return llvm::MayAlias;
+            return AliasAnalysis::MayAlias;
         else
-            return llvm::NoAlias;
+            return AliasAnalysis::NoAlias;
     }
     /// Test blk node for cpts
     inline bool containBlackHoleNode(const CPtSet& cpts) {

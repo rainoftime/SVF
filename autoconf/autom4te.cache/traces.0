@@ -1,8 +1,8 @@
-m4trace:/home/pta/pta/autoconf/m4/config_makefile.m4:5: -1- AC_DEFUN([AC_CONFIG_MAKEFILE], [AC_CONFIG_COMMANDS($1,
+m4trace:/home/parallels/SVF/autoconf/m4/config_makefile.m4:5: -1- AC_DEFUN([AC_CONFIG_MAKEFILE], [AC_CONFIG_COMMANDS($1,
   [${llvm_src}/autoconf/mkinstalldirs `dirname $1`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/$1 $1])
 ])
-m4trace:/home/pta/pta/autoconf/m4/config_project.m4:4: -1- AC_DEFUN([LLVM_CONFIG_PROJECT], [AC_ARG_WITH([llvmsrc],
+m4trace:/home/parallels/SVF/autoconf/m4/config_project.m4:4: -1- AC_DEFUN([LLVM_CONFIG_PROJECT], [AC_ARG_WITH([llvmsrc],
     AS_HELP_STRING([--with-llvmsrc],[Location of LLVM Source Code]),
     [llvm_src="$withval"],[llvm_src="]$1["])
   AC_SUBST(LLVM_SRC,$llvm_src)
@@ -68,14 +68,10 @@ m4trace:configure.ac:16: -1- m4_pattern_allow([^LLVM_SRC$])
 m4trace:configure.ac:16: -1- m4_pattern_allow([^LLVM_OBJ$])
 m4trace:configure.ac:26: -1- AC_CONFIG_MAKEFILE([Makefile])
 m4trace:configure.ac:27: -1- AC_CONFIG_MAKEFILE([lib/Makefile])
-m4trace:configure.ac:28: -1- AC_CONFIG_MAKEFILE([lib/DDA/Makefile])
-m4trace:configure.ac:29: -1- AC_CONFIG_MAKEFILE([lib/WPA/Makefile])
-m4trace:configure.ac:30: -1- AC_CONFIG_MAKEFILE([lib/MemoryModel/Makefile])
-m4trace:configure.ac:31: -1- AC_CONFIG_MAKEFILE([lib/Util/Makefile])
-m4trace:configure.ac:32: -1- AC_CONFIG_MAKEFILE([lib/Instrumentation/Makefile])
-m4trace:configure.ac:33: -1- AC_CONFIG_MAKEFILE([tools/Makefile])
-m4trace:configure.ac:34: -1- AC_CONFIG_MAKEFILE([tools/DDA/Makefile])
-m4trace:configure.ac:35: -1- AC_CONFIG_MAKEFILE([tools/WPA/Makefile])
-m4trace:configure.ac:36: -1- AC_CONFIG_MAKEFILE([tools/Instrumentation/Makefile])
-m4trace:configure.ac:75: -1- m4_pattern_allow([^LIB@&t@OBJS$])
-m4trace:configure.ac:75: -1- m4_pattern_allow([^LTLIBOBJS$])
+m4trace:configure.ac:28: -1- AC_CONFIG_MAKEFILE([lib/WPA/Makefile])
+m4trace:configure.ac:29: -1- AC_CONFIG_MAKEFILE([lib/MemoryModel/Makefile])
+m4trace:configure.ac:30: -1- AC_CONFIG_MAKEFILE([lib/Util/Makefile])
+m4trace:configure.ac:31: -1- AC_CONFIG_MAKEFILE([tools/Makefile])
+m4trace:configure.ac:32: -1- AC_CONFIG_MAKEFILE([tools/WPA/Makefile])
+m4trace:configure.ac:71: -1- m4_pattern_allow([^LIB@&t@OBJS$])
+m4trace:configure.ac:71: -1- m4_pattern_allow([^LTLIBOBJS$])

@@ -31,6 +31,8 @@
 #include "MSSA/SVFGBuilder.h"
 #include "WPA/Andersen.h"
 
+#include <llvm/Support/CommandLine.h>
+
 using namespace llvm;
 using namespace analysisUtil;
 

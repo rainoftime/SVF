@@ -139,9 +139,9 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
  * Return alias results based on our points-to/alias analysis
  * TODO: Need to handle PartialAlias and MustAlias here.
  */
-llvm::AliasResult WPAPass::alias(const Value* V1, const Value* V2) {
+AliasAnalysis::AliasResult WPAPass::alias(const Value* V1, const Value* V2) {
 
-    llvm::AliasResult result = MayAlias;
+    AliasAnalysis::AliasResult result = MayAlias;
 
     PAG* pag = _pta->getPAG();
 

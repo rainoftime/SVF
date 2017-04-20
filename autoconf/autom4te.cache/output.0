@@ -1676,11 +1676,11 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-LLVM_SRC_ROOT="/home/pta/llvm-3.5.0/llvm-3.5.0.src"
-LLVM_OBJ_ROOT="/home/pta/llvm-3.5.0/llvm-3.5.0.obj"
+LLVM_SRC_ROOT="/home/ysui/llvm-3.8.0/llvm-3.8.0.src"
+LLVM_OBJ_ROOT="/home/ysui/llvm-3.8.0/llvm-3.8.0.obj"
 
 ac_aux_dir=
-for ac_dir in $LLVM_SRC_ROOT/autoconf "$srcdir"/$LLVM_SRC_ROOT/autoconf; do
+for ac_dir in autoconf "$srcdir"/autoconf; do
   if test -f "$ac_dir/install-sh"; then
     ac_aux_dir=$ac_dir
     ac_install_sh="$ac_aux_dir/install-sh -c"
@@ -1696,7 +1696,7 @@ for ac_dir in $LLVM_SRC_ROOT/autoconf "$srcdir"/$LLVM_SRC_ROOT/autoconf; do
   fi
 done
 if test -z "$ac_aux_dir"; then
-  as_fn_error $? "cannot find install-sh, install.sh, or shtool in $LLVM_SRC_ROOT/autoconf \"$srcdir\"/$LLVM_SRC_ROOT/autoconf" "$LINENO" 5
+  as_fn_error $? "cannot find install-sh, install.sh, or shtool in autoconf \"$srcdir\"/autoconf" "$LINENO" 5
 fi
 
 # These three variables are undocumented and unsupported,
@@ -1744,9 +1744,6 @@ ac_config_commands="$ac_config_commands Makefile"
 ac_config_commands="$ac_config_commands lib/Makefile"
 
 
-ac_config_commands="$ac_config_commands lib/DDA/Makefile"
-
-
 ac_config_commands="$ac_config_commands lib/WPA/Makefile"
 
 
@@ -1756,19 +1753,10 @@ ac_config_commands="$ac_config_commands lib/MemoryModel/Makefile"
 ac_config_commands="$ac_config_commands lib/Util/Makefile"
 
 
-ac_config_commands="$ac_config_commands lib/Instrumentation/Makefile"
-
-
 ac_config_commands="$ac_config_commands tools/Makefile"
 
 
-ac_config_commands="$ac_config_commands tools/DDA/Makefile"
-
-
 ac_config_commands="$ac_config_commands tools/WPA/Makefile"
-
-
-ac_config_commands="$ac_config_commands tools/Instrumentation/Makefile"
 
 
 
@@ -2499,15 +2487,11 @@ do
     "Makefile.common") CONFIG_FILES="$CONFIG_FILES Makefile.common" ;;
     "Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS Makefile" ;;
     "lib/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/Makefile" ;;
-    "lib/DDA/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/DDA/Makefile" ;;
     "lib/WPA/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/WPA/Makefile" ;;
     "lib/MemoryModel/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/MemoryModel/Makefile" ;;
     "lib/Util/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/Util/Makefile" ;;
-    "lib/Instrumentation/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/Instrumentation/Makefile" ;;
     "tools/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/Makefile" ;;
-    "tools/DDA/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/DDA/Makefile" ;;
     "tools/WPA/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/WPA/Makefile" ;;
-    "tools/Instrumentation/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/Instrumentation/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -2930,24 +2914,16 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/Makefile Makefile ;;
     "lib/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/Makefile lib/Makefile ;;
-    "lib/DDA/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/DDA/Makefile`
-   ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/DDA/Makefile lib/DDA/Makefile ;;
     "lib/WPA/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/WPA/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/WPA/Makefile lib/WPA/Makefile ;;
     "lib/MemoryModel/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/MemoryModel/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/MemoryModel/Makefile lib/MemoryModel/Makefile ;;
     "lib/Util/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/Util/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/Util/Makefile lib/Util/Makefile ;;
-    "lib/Instrumentation/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/Instrumentation/Makefile`
-   ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/Instrumentation/Makefile lib/Instrumentation/Makefile ;;
     "tools/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname tools/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/tools/Makefile tools/Makefile ;;
-    "tools/DDA/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname tools/DDA/Makefile`
-   ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/tools/DDA/Makefile tools/DDA/Makefile ;;
     "tools/WPA/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname tools/WPA/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/tools/WPA/Makefile tools/WPA/Makefile ;;
-    "tools/Instrumentation/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname tools/Instrumentation/Makefile`
-   ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/tools/Instrumentation/Makefile tools/Instrumentation/Makefile ;;
 
   esac
 done # for ac_tag
