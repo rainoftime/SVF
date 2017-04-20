@@ -604,8 +604,8 @@ void CHGraph::analyzeVTables(const Module &M) {
             E = M.global_end(); I != E; ++I) {
         const GlobalValue *globalvalue = dyn_cast<const GlobalValue>(I);
         if (isValVtbl(globalvalue)) {
-            if (isa<ArrayType>(globalvalue->getOperand(0)->getType()) &&
-                    globalvalue->getNumOperands() > 0) {
+            if (globalvalue->getNumOperands() > 0 && isa<ArrayType>(globalvalue->getOperand(0)->getType())
+                    ) {
 
                 string vtblClassName = getClassNameFromVtblVal(globalvalue);
                 CHNode *node = getOrCreateNode(vtblClassName);
