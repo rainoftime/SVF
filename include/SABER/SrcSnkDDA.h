@@ -107,14 +107,14 @@ public:
         getPathAllocator()->allocate(module);
 
         time(&CurrTime);
-        double TimeElapsed = difftime(CurrTime, StartTime);
+        TimeElapsed = difftime(CurrTime, StartTime);
         llvm::errs() << "SVFG @ Pre-analysis: " << TimeElapsed << "s\n";
 
         initSrcs();
         initSnks();
 
         time(&CurrTime);
-        double TimeElapsed = difftime(CurrTime, StartTime);
+        TimeElapsed = difftime(CurrTime, StartTime);
         llvm::errs() << "Pre-analysis: " << TimeElapsed << "s\n";
     }
 
