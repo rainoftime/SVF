@@ -201,6 +201,11 @@ public:
     static inline void setMaxCxtLen(u32_t max) {
         maximumCxtLen = max;
     }
+
+    static inline u32_t getMaxCxtLen() {
+        return maximumCxtLen;
+    }
+
     /// Push context
     inline virtual bool pushContext(NodeID ctx) {
 
