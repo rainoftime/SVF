@@ -141,9 +141,11 @@ private:
 
     CallSiteID getCSID(const SVFGEdge*);
 
-    void reportBug();
+    void reportBug(const Instruction*);
 
     bool reachable(const llvm::Instruction*, const llvm::Instruction*);
+
+    void printContextStack(std::vector<const SVFGEdge*>&);
 };
 
 #endif /* USEAFTERFREECHECKER_H_ */

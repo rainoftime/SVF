@@ -27,9 +27,12 @@
  */
 
 #include <llvm/Support/CommandLine.h>
+#include <llvm/Support/Debug.h>
 
 #include "SABER/UseAfterFreeChecker.h"
 #include "Util/AnalysisUtil.h"
+
+#define DEBUG_TYPE "uaf"
 
 using namespace llvm;
 using namespace analysisUtil;
@@ -47,18 +50,13 @@ void UseAfterFreeChecker::initSrcs() {
     for(PAG::CSToArgsListMap::iterator It = G->getCallSiteArgsMap().begin(),
             E = G->getCallSiteArgsMap().end(); It != E; ++It) {
         const Function* F = getCallee(It->first);
-        if(isSinkLikeFun(F)) {
+        if(isSinkLikeFun(F) && F->empty()) {
             PAG::PAGNodeList& Arglist = It->second;
             assert(!Arglist.empty() && "no actual parameter at deallocation site?");
-            const ActualParmSVFGNode* Src = getSVFG()->getActualParmSVFGNode(Arglist.front(),It->first);
-
-            auto& OEs = Src->getOutEdges();
-            assert(OEs.size() == 1);
-            auto* Edge = *OEs.begin();
-            assert(Edge->isCallDirectVFGEdge());
+            ActualParmSVFGNode* Src = getSVFG()->getActualParmSVFGNode(Arglist.front(),It->first);
 
             addToSources(Src); // e.g., add p to sources if free(p)
-            addSrcToEdge(Src, Edge);
+            addSrcToEdge(Src, new CallDirSVFGEdge(Src, nullptr, getSVFG()->getCallSiteID(Src->getCallSite(), F)));
         }
     }
 }
@@ -85,12 +83,17 @@ bool UseAfterFreeChecker::runOnModule(llvm::Module& M) {
         std::vector<const SVFGEdge*> Ctx;
         Ctx.push_back(SrcToCallEdgeMap[Src]);
 
+
+        DEBUG(errs() << "Start.... " << Src->getId() << "\n");
+
         push();
         searchBackward(Src, nullptr, Ctx);
         pop();
     }
 
     finalize();
+    std::string filename("svfg.dot");
+    const_cast<SVFG*>(getSVFG())->dump(filename);
     return false;
 }
 
@@ -98,6 +101,8 @@ void UseAfterFreeChecker::searchBackward(const SVFGNode* CurrNode, const SVFGNod
     if (Ctx.size() > ContextCond::getMaxCxtLen() + 1) {
         return;
     }
+
+    DEBUG(errs() << "VisitingB " << CurrNode->getId() << "\n");
 
     SVFGPath.add(CurrNode);
 
@@ -126,7 +131,9 @@ void UseAfterFreeChecker::searchBackward(const SVFGNode* CurrNode, const SVFGNod
         assert(Ancestor != CurrNode);
 
         if (InEdge->isCallVFGEdge() || InEdge->isRetVFGEdge()) {
-            if (!matchContextB(Ctx, InEdge)) {
+            bool match = matchContextB(Ctx, InEdge);
+            DEBUG_WITH_TYPE("bctx", printContextStack(Ctx));
+            if (!match) {
                 continue;
             }
         }
@@ -143,8 +150,40 @@ void UseAfterFreeChecker::searchForward(const SVFGNode* CurrNode, const SVFGNode
         return;
     }
 
+    if (PrevNode)
+        DEBUG(errs() << "VisitingF " << CurrNode->getId() << ", Prev: " << PrevNode->getId() << "\n");
+    else
+        DEBUG(errs() << "VisitingF " << CurrNode->getId() << ", Prev: Null\n");
+
     if (SVFGPath.top() != CurrNode) {
         SVFGPath.add(CurrNode);
+    }
+
+
+    if (auto* StmtNode = dyn_cast<StmtSVFGNode>(CurrNode)) {
+        auto* PAGE = StmtNode->getPAGEdge();
+        auto* Inst = PAGE->getInst();
+        if(!Inst->getType()->isVoidTy())
+            for (auto It = Inst->user_begin(), E = Inst->user_end(); It != E; ++It) {
+                auto User = dyn_cast<Instruction>(*It);
+                if (!User)
+                    continue;
+
+                bool report = false;
+                if (auto* X = dyn_cast<LoadInst>(User)) {
+                    report = X->getPointerOperand() == Inst;
+                } else if (auto* X = dyn_cast<StoreInst>(User)) {
+                    report = X->getPointerOperand() == Inst;
+                } else if (auto* X = dyn_cast<CallInst>(User)) {
+                    if (X->getCalledFunction() && isSinkLikeFun(X->getCalledFunction())) {
+                        report = X->getArgOperand(0) == Inst;
+                    }
+                }
+
+                if (report && reachable(CS, Inst)) {
+                    reportBug(User);
+                }
+            }
     }
 
     auto& OutEdges = CurrNode->getOutEdges();
@@ -154,23 +193,14 @@ void UseAfterFreeChecker::searchForward(const SVFGNode* CurrNode, const SVFGNode
         if (Child == PrevNode)
             continue;
 
-        if ((isa<LoadSVFGNode>(Child) || isa<StoreSVFGNode>(Child)) && TagX) {
-            auto* Stmt = dyn_cast<StmtSVFGNode>(Child);
-            auto* PAGE = Stmt->getPAGEdge();
-            auto* Inst = PAGE->getInst();
-
-            if (reachable(CS, Inst)) {
-                push();
-                SVFGPath.add(Child);
-                reportBug();
-                pop();
-            }
-        }
-
         bool Tag = true && TagX;
         if (OutEdge->isRetVFGEdge() || OutEdge->isCallVFGEdge()) {
             CallSiteID CSID = getCSID(OutEdge);
             CallSite CS2 = getSVFG()->getCallSite(CSID);
+
+            if (CS2.getInstruction() == CS) {
+                continue;
+            }
 
             // match ctx
             if (!matchContextF(Ctx, OutEdge)) {
@@ -197,6 +227,8 @@ bool UseAfterFreeChecker::matchContextB(std::vector<const SVFGEdge*>& Ctx, SVFGE
 
         if (ID == TopID) {
             if (Edge->isCallVFGEdge() != Top->isCallVFGEdge()) {
+                DEBUG_WITH_TYPE("bctx", errs() << "Pop back visiting " <<
+                        getSourceLoc(getSVFG()->getCallSite(ID).getInstruction()));
                 Ctx.pop_back();
                 return true;
             }
@@ -211,7 +243,8 @@ bool UseAfterFreeChecker::matchContextB(std::vector<const SVFGEdge*>& Ctx, SVFGE
                     }
                 }
 
-                if (AllCalls) {
+                if (AllCalls && Edge->getDstNode()->getBB()->getParent()
+                        == Top->getSrcNode()->getBB()->getParent()) {
                     Ctx.push_back(Edge);
                     return true;
                 }
@@ -253,7 +286,8 @@ bool UseAfterFreeChecker::matchContextF(std::vector<const SVFGEdge*>& Ctx, SVFGE
                     }
                 }
 
-                if (AllRets) {
+                if (AllRets && Top->getDstNode()->getBB()->getParent()
+                        == Edge->getSrcNode()->getBB()->getParent()) {
                     Ctx.push_back(Edge);
                     return true;
                 }
@@ -287,29 +321,35 @@ CallSiteID UseAfterFreeChecker::getCSID(const SVFGEdge* Edge) {
     return ID;
 }
 
-void UseAfterFreeChecker::reportBug() {
+void UseAfterFreeChecker::reportBug(const Instruction* TailInst) {
     static unsigned Index = 0;
     outs() << "+++++" << ++Index << "+++++\n";
     for(unsigned I = 0; I < SVFGPath.size(); ++I) {
         auto* N = SVFGPath[I];
         outs() << "[" << I << "] ";
+        const Instruction* Inst = nullptr;
         if (auto* X = dyn_cast<StmtSVFGNode>(N)) {
-            outs() << *(X->getInst());
+            Inst = (X->getInst());
         } if (auto* X = dyn_cast<ActualParmSVFGNode>(N)) {
-            outs() << *X->getCallSite().getInstruction();
+            Inst = X->getCallSite().getInstruction();
         } else if (auto* X = dyn_cast<ActualINSVFGNode>(N)) {
-            outs() << *X->getCallSite().getInstruction();
+            Inst = X->getCallSite().getInstruction();
         } else if (auto* X = dyn_cast<ActualRetSVFGNode>(N)) {
-            outs() << *X->getCallSite().getInstruction();
+            Inst = X->getCallSite().getInstruction();
         } else if (auto* X = dyn_cast<ActualOUTSVFGNode>(N)) {
-            outs() << *X->getCallSite().getInstruction();
-        } else {
-            outs() << N->getId();
+            Inst = X->getCallSite().getInstruction();
         }
 
+        if (Inst) {
+            outs() << N->getId() << " (" << Inst->getParent()->getParent()->getName() << ") \t" << " " << *Inst;
+        } else {
+            outs() << N->getId() << " (" << N->getBB()->getParent()->getName() << ") ";
+        }
         outs() << "\n";
     }
-    outs() << "\n";
+    outs() << "[" << SVFGPath.size() << "] ";
+    outs() << "XX (" << TailInst->getParent()->getParent()->getName() << ") \t" << *TailInst;
+    outs() << "\n\n";
 
 }
 
@@ -317,6 +357,22 @@ bool UseAfterFreeChecker::reachable(const llvm::Instruction* From, const llvm::I
     if (From->getParent()->getParent() != To->getParent()->getParent()) {
         return true;
     } else {
-        return CFGR->isReachable(From, To);
+        return CFGR->isReachable(From, To) && From != To;
     }
+}
+
+void UseAfterFreeChecker::printContextStack(std::vector<const SVFGEdge*>& Ctx) {
+    outs() << "+++++++++++++++++++++++++\n";
+    for (auto* Edge : Ctx) {
+        bool Call = Edge->isCallVFGEdge();
+        CallSiteID Id = getCSID(Edge);
+        CallSite CS = getSVFG()->getCallSite(Id);
+        if (Call)
+            outs() << "+ Call to ";
+        else
+            outs() << "+ Retn fm ";
+        outs() << CS.getCalledFunction()->getName();
+        outs() << " at Line " << getSourceLoc(CS.getInstruction()) << "\n";
+    }
+    outs() << "+++++++++++++++++++++++++\n";
 }
