@@ -40,17 +40,6 @@
 class UseAfterFreeChecker : public SrcSnkDDA, public llvm::ModulePass {
 
 public:
-    typedef FIFOWorkList<llvm::CallSite> CSWorkList;
-    typedef ProgSlice::VFWorkList WorkList;
-    typedef NodeBS SVFGNodeBS;
-    typedef PAG::CallSiteSet CallSiteSet;
-    enum LEAK_TYPE {
-        NEVER_FREE_LEAK,
-        CONTEXT_LEAK,
-        PATH_LEAK,
-        GLOBAL_LEAK
-    };
-
     /// Pass ID
     static char ID;
 
@@ -124,17 +113,15 @@ private:
 
     PushPopVector<const SVFGNode*> SVFGPath;
 
-    void searchBackward(const SVFGNode*, const SVFGNode*, std::vector<const SVFGEdge*>);
+    void searchBackward(const SVFGNode*, const SVFGNode*, const SVFGEdge*, std::vector<const SVFGEdge*>);
 
-    void searchForward(const SVFGNode*, const SVFGNode*, std::vector<const SVFGEdge*>, llvm::Instruction*, bool);
+    void searchForward(const SVFGNode*, const SVFGNode*, const SVFGEdge*, std::vector<const SVFGEdge*>, llvm::Instruction*, bool);
 
-    void push() {
-        SVFGPath.push();
-    }
+    void push();
 
-    void pop() {
-        SVFGPath.pop();
-    }
+    void pop();
+
+    bool check(const Instruction*);
 
     bool matchContextB(std::vector<const SVFGEdge*>& Ctx, SVFGEdge* Edge);
     bool matchContextF(std::vector<const SVFGEdge*>& Ctx, SVFGEdge* Edge);
@@ -146,6 +133,80 @@ private:
     bool reachable(const llvm::Instruction*, const llvm::Instruction*);
 
     void printContextStack(std::vector<const SVFGEdge*>&);
+
+    const llvm::BasicBlock* getSVFGNodeBB(const SVFGNode* N) const {
+        const llvm::BasicBlock* B = N->getBB();
+        if(llvm::isa<NullPtrSVFGNode>(N) == false) {
+            //assert(bb && "this SVFG node should be in a basic block");
+            return B;
+        }
+        return nullptr;
+    }
+
+    llvm::CallSite getCallSite(const SVFGEdge* E) const {
+        assert(E->isCallVFGEdge() && "not a call svfg edge?");
+        if(const CallDirSVFGEdge* CallEdge = dyn_cast<CallDirSVFGEdge>(E))
+            return getSVFG()->getCallSite(CallEdge->getCallSiteId());
+        else
+            return getSVFG()->getCallSite(cast<CallIndSVFGEdge>(E)->getCallSiteId());
+    }
+
+    llvm::CallSite getRetSite(const SVFGEdge* E) const {
+        assert(E->isRetVFGEdge() && "not a return svfg edge?");
+        if(const RetDirSVFGEdge* CallEdge = dyn_cast<RetDirSVFGEdge>(E))
+            return getSVFG()->getCallSite(CallEdge->getCallSiteId());
+        else
+            return getSVFG()->getCallSite(cast<RetIndSVFGEdge>(E)->getCallSiteId());
+    }
+
+    std::string getSVFGNodeMsg(const SVFGNode* Node);
+
+    /// Get/set VF (value-flow) and CF (control-flow) conditions
+    //@{
+    std::map<const SVFGNode*, PathCondAllocator::Condition*> svfgNodeToCondMap;
+
+    inline PathCondAllocator::Condition* getVFCond(const SVFGNode* node) const {
+        auto it = svfgNodeToCondMap.find(node);
+        if(it==svfgNodeToCondMap.end()) {
+            return this->getPathAllocator()->getFalseCond();
+        }
+        return it->second;
+    }
+    inline bool setVFCond(const SVFGNode* node, PathCondAllocator::Condition* cond) {
+        auto it = svfgNodeToCondMap.find(node);
+        if(it!=svfgNodeToCondMap.end() && it->second == cond)
+            return false;
+
+        svfgNodeToCondMap[node] = cond;
+        return true;
+    }
+    //@}
+
+    const llvm::Value* getLLVMValue(const SVFGNode* node) const {
+        if(const StmtSVFGNode* stmt = dyn_cast<StmtSVFGNode>(node)) {
+            if(isa<StoreSVFGNode>(stmt) == false) {
+                if(stmt->getPAGDstNode()->hasValue())
+                    return stmt->getPAGDstNode()->getValue();
+            }
+        }
+        else if(const PHISVFGNode* phi = dyn_cast<PHISVFGNode>(node)) {
+            return phi->getRes()->getValue();
+        }
+        else if(const ActualParmSVFGNode* ap = dyn_cast<ActualParmSVFGNode>(node)) {
+            return ap->getParam()->getValue();
+        }
+        else if(const FormalParmSVFGNode* fp = dyn_cast<FormalParmSVFGNode>(node)) {
+            return fp->getParam()->getValue();
+        }
+        else if(const ActualRetSVFGNode* ar = dyn_cast<ActualRetSVFGNode>(node)) {
+            return ar->getRev()->getValue();
+        }
+        else if(const FormalRetSVFGNode* fr = dyn_cast<FormalRetSVFGNode>(node)) {
+            return fr->getRet()->getValue();
+        }
+
+        return NULL;
+    }
 };
 
 #endif /* USEAFTERFREECHECKER_H_ */
