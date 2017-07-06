@@ -382,8 +382,11 @@ PathCondAllocator::Condition* PathCondAllocator::getPHIComplementCond(const Basi
 PathCondAllocator::Condition* PathCondAllocator::ComputeInterCallVFGGuard(const llvm::BasicBlock* srcBB, const llvm::BasicBlock* dstBB, const BasicBlock* callBB) {
     const BasicBlock* funEntryBB = &dstBB->getParent()->getEntryBlock();
 
+    assert(srcBB->getParent() == callBB->getParent());
     Condition* c1 = ComputeIntraVFGGuard(srcBB,callBB);
     setCFCond(funEntryBB,condOr(getCFCond(funEntryBB),getCFCond(callBB)));
+
+    assert(funEntryBB->getParent() == dstBB->getParent());
     Condition* c2 = ComputeIntraVFGGuard(funEntryBB,dstBB);
     return condAnd(c1,c2);
 }

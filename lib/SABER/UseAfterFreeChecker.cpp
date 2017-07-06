@@ -63,6 +63,9 @@ void UseAfterFreeChecker::initSrcs() {
             assert(!Arglist.empty() && "no actual parameter at deallocation site?");
             ActualParmSVFGNode* Src = getSVFG()->getActualParmSVFGNode(Arglist.front(),It->first);
 
+
+            outs() << "Finding src: " << *Src->getCallSite().getInstruction() << "\n";
+
             addToSources(Src); // e.g., add p to sources if free(p)
             addSrcToEdge(Src, new CallDirSVFGEdge(Src, nullptr, getSVFG()->getCallSiteID(Src->getCallSite(), F)));
         }
@@ -504,7 +507,6 @@ bool UseAfterFreeChecker::check(const Instruction* User) {
     /*************************/
 
     PathCondAllocator::Condition* guard = PA->condAnd(getVFCond(SVFGPath[0]), succPathCond);
-
     if(guard != PA->getFalseCond()) {
         return true;
     }
