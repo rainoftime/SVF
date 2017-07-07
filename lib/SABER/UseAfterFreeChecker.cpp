@@ -163,7 +163,7 @@ void UseAfterFreeChecker::searchBackward(const SVFGNode* CurrNode, const SVFGNod
             if (!match) {
                 continue;
             }
-        } else if (IgnoreGlobal.getValue() && CurrNode->getBB() != Ancestor->getBB()) {
+        } else if (IgnoreGlobal.getValue() && CurrNode->getBB()->getParent() != Ancestor->getBB()->getParent()) {
             continue;
         }
 
@@ -243,7 +243,7 @@ void UseAfterFreeChecker::searchForward(const SVFGNode* CurrNode, const SVFGNode
             if (!reachable(CS, CS2.getInstruction())) {
                 Tag = false;
             }
-        } else if (IgnoreGlobal.getValue() && CurrNode->getBB() != Child->getBB()) {
+        } else if (IgnoreGlobal.getValue() && CurrNode->getBB()->getParent() != Child->getBB()->getParent()) {
             continue;
         }
 
