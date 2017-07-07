@@ -47,6 +47,9 @@ static cl::opt<bool> ReportNumOnly("report-num-only", cl::init(false),
 static cl::opt<bool> Nocheck("no-check", cl::init(false),
                                    cl::desc("Validate memory leak tests"));
 
+static cl::opt<bool> IgnoreGlobal("no-global", cl::init(false),
+                                   cl::desc("Validate memory leak tests"));
+
 static unsigned Index = 0;
 
 /*!
@@ -160,6 +163,8 @@ void UseAfterFreeChecker::searchBackward(const SVFGNode* CurrNode, const SVFGNod
             if (!match) {
                 continue;
             }
+        } else if (IgnoreGlobal.getValue() && CurrNode->getBB() != Ancestor->getBB()) {
+            continue;
         }
 
         push();
@@ -238,6 +243,8 @@ void UseAfterFreeChecker::searchForward(const SVFGNode* CurrNode, const SVFGNode
             if (!reachable(CS, CS2.getInstruction())) {
                 Tag = false;
             }
+        } else if (IgnoreGlobal.getValue() && CurrNode->getBB() != Child->getBB()) {
+            continue;
         }
 
         push();
