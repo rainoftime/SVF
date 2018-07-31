@@ -582,6 +582,7 @@ void PointerAnalysis::printIndCSTargets()
     llvm::outs() << "==================Function Pointer Targets==================\n";
     const CallEdgeMap& callEdges = getIndCallMap();
     llvm::outs() << __LINE__ << "\n";
+    if (callEdges.size() == 0) llvm::outs() << "CallEdgeMap is empty\n";
     CallEdgeMap::const_iterator it = callEdges.begin();
     CallEdgeMap::const_iterator eit = callEdges.end();
     for (; it != eit; ++it) {
