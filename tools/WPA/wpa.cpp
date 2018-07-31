@@ -69,7 +69,8 @@ public:
 
 
 int main(int argc, char ** argv) {
-
+    CaluTime timer;
+    timer.TimerBegin();
     sys::PrintStackTraceOnErrorSignal();
     llvm::PrettyStackTraceProgram X(argc, argv);
 
@@ -124,8 +125,6 @@ int main(int argc, char ** argv) {
 
     Passes.add(createBitcodeWriterPass(Out->os()));
 
-    CaluTime timer;
-    timer.TimerBegin();
     Passes.run(*M1.get());
     Out->keep();
     timer.TimerEnd();

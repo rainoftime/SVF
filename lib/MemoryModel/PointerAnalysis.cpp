@@ -82,6 +82,10 @@ static cl::opt<bool> EnableAliasCheck("alias-check", cl::init(true),
 static cl::opt<bool> EnableThreadCallGraph("enable-tcg", cl::init(true),
         cl::desc("Enable pointer analysis to use thread call graph"));
 
+
+static cl::opt<bool> PrintFuncPointerDetail("print-fp-detail", cl::init(false),
+                                      cl::desc("Print detailed results of of indirect call resolution"));
+
 static cl::opt<bool> INCDFPTData("incdata", cl::init(true),
                                  cl::desc("Enable incremental DFPTData for flow-sensitive analysis"));
 
@@ -581,16 +585,16 @@ void PointerAnalysis::printIndCSTargets()
 
     llvm::outs() << "==================Function Pointer Targets==================\n";
     const CallEdgeMap& callEdges = getIndCallMap();
-    llvm::outs() << __LINE__ << "\n";
+    //llvm::outs() << __LINE__ << "\n";
     if (callEdges.size() == 0) llvm::outs() << "CallEdgeMap is empty\n";
     CallEdgeMap::const_iterator it = callEdges.begin();
     CallEdgeMap::const_iterator eit = callEdges.end();
     for (; it != eit; ++it) {
-        llvm::outs() << __LINE__ << "\n";
+        //llvm::outs() << __LINE__ << "\n";
         const llvm::CallSite cs = it->first;
         const FunctionSet& targets = it->second;
         int cg_resolve_size = targets.size();
-        llvm::outs() << "cg targets size: " << cg_resolve_size << "\n";
+        //llvm::outs() << "cg targets size: " << cg_resolve_size << "\n";
         int i;
         for (i = 0; i < CG_BUCKET_NUMBER - 1; i++) {
             if (cg_resolve_size < cg_bucket_steps[i + 1]) {
@@ -601,7 +605,7 @@ void PointerAnalysis::printIndCSTargets()
         if (i == CG_BUCKET_NUMBER - 1) {
             cg_bucket[i]++;
         }
-        printIndCSTargets(cs, targets);
+        if (PrintFuncPointerDetail.getValue()) printIndCSTargets(cs, targets);
     }
 
     const CallSiteToFunPtrMap& indCS = getIndirectCallsites();
@@ -611,12 +615,15 @@ void PointerAnalysis::printIndCSTargets()
     for (; csIt != csEit; ++csIt) {
         const llvm::CallSite& cs = csIt->first;
         if (hasIndCSCallees(cs) == false) {
-            cg_zero++;
-            llvm::outs() << "\nNodeID: " << csIt->second;
-            llvm::outs() << "\nCallSite: ";
-            cs.getInstruction()->print(llvm::outs());
-            llvm::outs() << "\tLocation: " << analysisUtil::getSourceLoc(cs.getInstruction());
-            llvm::outs() << "\n\t!!!has no targets!!!\n";
+            // do not consider inline asm now
+            if (!isa<InlineAsm>(cs.getCalledValue())) cg_zero++;
+            if (PrintFuncPointerDetail.getValue()) {
+              llvm::outs() << "\nNodeID: " << csIt->second;
+              llvm::outs() << "\nCallSite: ";
+              cs.getInstruction()->print(llvm::outs());
+              llvm::outs() << "\tLocation: " << analysisUtil::getSourceLoc(cs.getInstruction());
+              llvm::outs() << "\n\t!!!has no targets!!!\n";
+            }
         }
     }
 
