@@ -39,12 +39,33 @@
 #include <llvm/IR/LLVMContext.h>		// for llvm LLVMContext
 #include <llvm/Support/SourceMgr.h> // for SMDiagnostic
 #include <llvm/Bitcode/ReaderWriter.h>		// for createBitcodeWriterPass
-
-
+#include <ctime>
+#include <sys/time.h>
 using namespace llvm;
 
 static cl::opt<std::string> InputFilename(cl::Positional,
         cl::desc("<input bitcode>"), cl::init("-"));
+
+class CaluTime {
+private:
+    struct timeval t_start_, t_end_, t_result_;
+    double result_;
+public:
+    CaluTime() {}
+    ~CaluTime() {}
+    void TimerBegin() {
+      gettimeofday(&t_start_, NULL);
+    }
+    void TimerEnd() {
+      gettimeofday(&t_end_, NULL);
+    }
+    double TimerSpan() {
+      timersub(&t_end_, &t_start_, &t_result_);
+      result_ = t_result_.tv_sec + (1.0 * t_result_.tv_usec) / 1000000;
+      return result_;
+    }
+};
+
 
 
 int main(int argc, char ** argv) {
@@ -103,9 +124,13 @@ int main(int argc, char ** argv) {
 
     Passes.add(createBitcodeWriterPass(Out->os()));
 
+    CaluTime timer;
+    timer.TimerBegin();
     Passes.run(*M1.get());
     Out->keep();
-
+    timer.TimerEnd();
+    double time = timer.TimerSpan();
+    llvm::outs() << "WPA time: " << time << "\n";
     return 0;
 
 }

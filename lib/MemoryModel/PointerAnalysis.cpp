@@ -548,6 +548,7 @@ void BVDataPTAImpl::dumpAllPts() {
  */
 void PointerAnalysis::printIndCSTargets(const llvm::CallSite cs, const FunctionSet& targets)
 {
+    
     llvm::outs() << "\nNodeID: " << getFunPtr(cs);
     llvm::outs() << "\nCallSite: ";
     cs.getInstruction()->print(llvm::outs());
@@ -574,22 +575,42 @@ void PointerAnalysis::printIndCSTargets(const llvm::CallSite cs, const FunctionS
  */
 void PointerAnalysis::printIndCSTargets()
 {
+    int CG_BUCKET_NUMBER = 11;
+    int cg_bucket[11] = { 0 };
+    int cg_bucket_steps[11] = { 0, 1, 2, 3, 4, 5, 6, 7, 10, 30, 100 };
+
     llvm::outs() << "==================Function Pointer Targets==================\n";
     const CallEdgeMap& callEdges = getIndCallMap();
+    llvm::outs() << __LINE__ << "\n";
     CallEdgeMap::const_iterator it = callEdges.begin();
     CallEdgeMap::const_iterator eit = callEdges.end();
     for (; it != eit; ++it) {
+        llvm::outs() << __LINE__ << "\n";
         const llvm::CallSite cs = it->first;
         const FunctionSet& targets = it->second;
+        int cg_resolve_size = targets.size();
+        llvm::outs() << "cg targets size: " << cg_resolve_size << "\n";
+        int i;
+        for (i = 0; i < CG_BUCKET_NUMBER - 1; i++) {
+            if (cg_resolve_size < cg_bucket_steps[i + 1]) {
+                cg_bucket[i]++;
+                break;
+            }
+        }
+        if (i == CG_BUCKET_NUMBER - 1) {
+            cg_bucket[i]++;
+        }
         printIndCSTargets(cs, targets);
     }
 
     const CallSiteToFunPtrMap& indCS = getIndirectCallsites();
     CallSiteToFunPtrMap::const_iterator csIt = indCS.begin();
     CallSiteToFunPtrMap::const_iterator csEit = indCS.end();
+    int cg_zero = 0;
     for (; csIt != csEit; ++csIt) {
         const llvm::CallSite& cs = csIt->first;
         if (hasIndCSCallees(cs) == false) {
+            cg_zero++;
             llvm::outs() << "\nNodeID: " << csIt->second;
             llvm::outs() << "\nCallSite: ";
             cs.getInstruction()->print(llvm::outs());
@@ -597,6 +618,25 @@ void PointerAnalysis::printIndCSTargets()
             llvm::outs() << "\n\t!!!has no targets!!!\n";
         }
     }
+
+    cg_bucket[0] = cg_zero;
+
+    llvm::outs() << "\n";
+    llvm::outs() << "---------------CG Resolution Statistics Begin-------------------------\n";
+    outs() << "\n";
+
+    int i;
+    for (i = 0; i < CG_BUCKET_NUMBER - 1; i++) {
+        if (cg_bucket_steps[i] == cg_bucket_steps[i + 1] - 1)
+            llvm::outs() << "\t" << cg_bucket_steps[i] << ":\t\t";
+        else
+            llvm::outs() << "\t" << cg_bucket_steps[i] << " - " << cg_bucket_steps[i + 1] - 1 << ": \t\t";
+        llvm::outs() << cg_bucket[i] << "\n";
+    }
+    llvm::outs() << "\t>" << cg_bucket_steps[i] << ": \t\t";
+    llvm::outs() << cg_bucket[i] << "\n";
+    llvm::outs() << "\n";
+    llvm::outs() << "---------------CG Resolution Statistics End-------------------------\n";
 }
 
 /*!
