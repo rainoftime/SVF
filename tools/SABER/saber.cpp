@@ -29,6 +29,7 @@
 #include "SABER/LeakChecker.h"
 #include "SABER/FileChecker.h"
 #include "SABER/DoubleFreeChecker.h"
+#include "SABER/UseAfterFreeChecker.h"
 
 #include <llvm/Support/CommandLine.h>	// for cl
 #include <llvm/Bitcode/BitcodeWriterPass.h>  // for bitcode write
@@ -55,6 +56,9 @@ static cl::opt<bool> FILECHECKER("fileck", cl::init(false),
 
 static cl::opt<bool> DFREECHECKER("dfree", cl::init(false),
                                   cl::desc("Double Free Detection"));
+
+static cl::opt<bool> UAFCHECKER("uaf", cl::init(false),
+                                 cl::desc("Use After Free Detection"));
 
 int main(int argc, char ** argv) {
 
@@ -113,6 +117,8 @@ int main(int argc, char ** argv) {
         Passes.add(new FileChecker());
     else if(DFREECHECKER)
         Passes.add(new DoubleFreeChecker());
+    else if(UAFCHECKER)
+        Passes.add(new UseAfterFreeChecker());
 
     Passes.add(createBitcodeWriterPass(Out->os()));
 

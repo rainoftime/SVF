@@ -402,6 +402,9 @@ protected:
     }
     inline NodeID getDef(const PAGNode* pagNode) const {
         PAGNodeToDefMapTy::const_iterator it = PAGNodeToDefMap.find(pagNode);
+        if (it == PAGNodeToDefMap.end()) {
+            llvm::errs() << * pagNode->getValue() << "\n";
+        }
         assert(it!=PAGNodeToDefMap.end() && "PAG node does not have a definition??");
         return it->second;
     }

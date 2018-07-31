@@ -88,35 +88,7 @@ public:
     virtual void analyze(llvm::Module& module);
 
     /// Initialize analysis
-    virtual void initialize(llvm::Module& module) {
-        llvm::errs() << "==---------Start Pre-analysis---------==\n";
-        time_t StartTime, CurrTime;
-        time(&StartTime);
-
-        ptaCallGraph = new PTACallGraph(&module);
-        AndersenWaveDiff* ander = AndersenWaveDiff::createAndersenWaveDiff(module);
-
-        time(&CurrTime);
-        double TimeElapsed = difftime(CurrTime, StartTime);
-        llvm::errs() << "PTA @ Pre-analysis: " << TimeElapsed << "s\n";
-
-        svfg =  memSSA.buildSVFG(ander);
-        setGraph(memSSA.getSVFG());
-        //AndersenWaveDiff::releaseAndersenWaveDiff();
-        /// allocate control-flow graph branch conditions
-        getPathAllocator()->allocate(module);
-
-        time(&CurrTime);
-        TimeElapsed = difftime(CurrTime, StartTime);
-        llvm::errs() << "SVFG @ Pre-analysis: " << TimeElapsed << "s\n";
-
-        initSrcs();
-        initSnks();
-
-        time(&CurrTime);
-        TimeElapsed = difftime(CurrTime, StartTime);
-        llvm::errs() << "Pre-analysis: " << TimeElapsed << "s\n";
-    }
+    virtual void initialize(llvm::Module& module);
 
     /// Finalize analysis
     virtual void finalize() {

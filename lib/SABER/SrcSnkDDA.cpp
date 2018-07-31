@@ -40,11 +40,40 @@ static cl::opt<bool> DumpSlice("dump-slice", cl::init(false),
 static cl::opt<unsigned> cxtLimit("cxtlimit",  cl::init(3),
                                   cl::desc("Source-Sink Analysis Contexts Limit"));
 
-void SrcSnkDDA::analyze(llvm::Module& module) {
+void SrcSnkDDA::initialize(llvm::Module& module) {
+    llvm::errs() << "==---------Start Pre-analysis---------==\n";
+    time_t StartTime, CurrTime;
+    time(&StartTime);
 
-    initialize(module);
+    ptaCallGraph = new PTACallGraph(&module);
+    AndersenWaveDiff* ander = AndersenWaveDiff::createAndersenWaveDiff(module);
+
+    time(&CurrTime);
+    double TimeElapsed = difftime(CurrTime, StartTime);
+    llvm::errs() << "PTA @ Pre-analysis: " << TimeElapsed << "s\n";
+
+    svfg =  memSSA.buildSVFG(ander);
+    setGraph(memSSA.getSVFG());
+    //AndersenWaveDiff::releaseAndersenWaveDiff();
+    /// allocate control-flow graph branch conditions
+    getPathAllocator()->allocate(module);
+
+    time(&CurrTime);
+    TimeElapsed = difftime(CurrTime, StartTime);
+    llvm::errs() << "SVFG @ Pre-analysis: " << TimeElapsed << "s\n";
+
+    initSrcs();
+    initSnks();
+
+    time(&CurrTime);
+    TimeElapsed = difftime(CurrTime, StartTime);
+    llvm::errs() << "Pre-analysis: " << TimeElapsed << "s\n";
 
     ContextCond::setMaxCxtLen(cxtLimit);
+}
+
+void SrcSnkDDA::analyze(llvm::Module& module) {
+    initialize(module);
 
     for (SVFGNodeSetIter iter = sourcesBegin(), eiter = sourcesEnd();
             iter != eiter; ++iter) {
