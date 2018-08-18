@@ -62,7 +62,7 @@ DDAPass::~DDAPass() {
 }
 
 
-bool DDAPass::runOnModule(SVFModule module)
+bool DDAPass::runOnModule(llvm::Module& module)
 {
     /// initialization for llvm alias analyzer
     //InitializeAliasAnalysis(this, SymbolTableInfo::getDataLayout(&module));
@@ -79,7 +79,7 @@ bool DDAPass::runOnModule(SVFModule module)
 }
 
 /// select a client to initialize queries
-void DDAPass::selectClient(SVFModule module) {
+void DDAPass::selectClient(llvm::Module& module) {
 
     if (!userInputQuery.empty()) {
         /// solve function pointer
@@ -105,7 +105,7 @@ void DDAPass::selectClient(SVFModule module) {
 }
 
 /// Create pointer analysis according to specified kind and analyze the module.
-void DDAPass::runPointerAnalysis(SVFModule module, u32_t kind)
+void DDAPass::runPointerAnalysis(llvm::Module&, u32_t kind)
 {
 
     VFPathCond::setMaxPathLen(maxPathLen);
@@ -276,7 +276,7 @@ void DDAPass::collectCxtInsenEdgeForVFCycle(PointerAnalysis* pta, const SVFG* sv
  * Return alias results based on our points-to/alias analysis
  * TODO: Need to handle PartialAlias and MustAlias here.
  */
-llvm::AliasResult DDAPass::alias(const Value* V1, const Value* V2) {
+llvm::AliasAnalysis::AliasResult DDAPass::alias(const Value* V1, const Value* V2) {
     PAG* pag = _pta->getPAG();
 
     /// TODO: When this method is invoked during compiler optimizations, the IR

@@ -46,23 +46,18 @@ public:
     }
 
     /// Interface expose to users of our pointer analysis, given Location infos
-    virtual inline llvm::AliasResult alias(const llvm::MemoryLocation &LocA, const llvm::MemoryLocation &LocB) {
+    virtual inline llvm::AliasAnalysis::AliasResult alias(const llvm::MemoryLocation &LocA, const llvm::MemoryLocation &LocB) {
         return alias(LocA.Ptr, LocB.Ptr);
     }
 
     /// Interface expose to users of our pointer analysis, given Value infos
-    virtual llvm::AliasResult alias(const llvm::Value* V1,	const llvm::Value* V2);
+    virtual llvm::AliasAnalysis::AliasResult alias(const llvm::Value* V1,	const llvm::Value* V2);
 
     /// We start from here
-    virtual bool runOnModule(SVFModule module);
-
-    /// We start from here
-    virtual bool runOnModule(llvm::Module& module) {
-        return runOnModule(module);
-    }
+    virtual bool runOnModule(llvm::Module& module);
 
     /// Select a client
-    virtual void selectClient(SVFModule module);
+    virtual void selectClient(llvm::Module& module);
 
     /// Pass name
     virtual inline llvm::StringRef getPassName() const {
@@ -73,7 +68,7 @@ private:
     /// Print queries' pts
     void printQueryPTS();
     /// Create pointer analysis according to specified kind and analyze the module.
-    void runPointerAnalysis(SVFModule module, u32_t kind);
+    void runPointerAnalysis(llvm::Module& module, u32_t kind);
     /// Initialize queries for DDA
     void answerQueries(PointerAnalysis* pta);
     /// Context insensitive Edge for DDA

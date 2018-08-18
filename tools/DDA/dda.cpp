@@ -20,6 +20,10 @@
 #include <llvm/IR/LLVMContext.h>		// for llvm LLVMContext
 #include <llvm/Support/SourceMgr.h> // for SMDiagnostic
 #include <llvm/Bitcode/BitcodeWriterPass.h>		// for createBitcodeWriterPass
+#include <llvm/Bitcode/ReaderWriter.h>      // for createBitcodeWriterPass
+#include <ctime>
+#include <sys/time.h>
+using namespace llvm;
 
 using namespace llvm;
 
@@ -51,8 +55,10 @@ static cl::opt<bool> ENABLECONTEXT("cdaa", cl::init(false),
 static cl::opt<bool> ENABLEFLOW("ldaa", cl::init(false),
                                 cl::desc("enable flow-sensitivity for demand-driven analysis"));
 
-int main(int argc, char ** argv) {
 
+
+int main(int argc, char ** argv) {
+#if 0
     int arg_num = 0;
     char **arg_value = new char*[argc];
     std::vector<std::string> moduleNameVec;
@@ -66,6 +72,65 @@ int main(int argc, char ** argv) {
     dda->runOnModule(svfModule);
 
     svfModule.dumpModulesToFile(".dvf");
+#else
+    sys::PrintStackTraceOnErrorSignal();
+    llvm::PrettyStackTraceProgram X(argc, argv);
+
+    LLVMContext &Context = getGlobalContext();
+
+    std::string OutputFilename;
+
+    cl::ParseCommandLineOptions(argc, argv, "Demand-Driven Points-to Analysis\n");
+    sys::PrintStackTraceOnErrorSignal();
+
+    PassRegistry &Registry = *PassRegistry::getPassRegistry();
+
+    initializeCore(Registry);
+    initializeScalarOpts(Registry);
+    initializeIPO(Registry);
+    initializeAnalysis(Registry);
+    initializeTransformUtils(Registry);
+    initializeInstCombine(Registry);
+    initializeInstrumentation(Registry);
+    initializeTarget(Registry);
+
+    llvm::legacy::PassManager Passes;
+
+    SMDiagnostic Err;
+
+    // Load the input module...
+    std::unique_ptr<Module> M1 = parseIRFile(InputFilename, Err, Context);
+
+    if (!M1) {
+        Err.print(argv[0], errs());
+        return 1;
+    }
+
+
+    std::unique_ptr<tool_output_file> Out;
+    std::error_code ErrorInfo;
+
+    StringRef str(InputFilename);
+    InputFilename = str.rsplit('.').first;
+    OutputFilename = InputFilename + ".dvf";
+
+    Out.reset(
+        new tool_output_file(OutputFilename.c_str(), ErrorInfo,
+                             sys::fs::F_None));
+
+    if (ErrorInfo) {
+        errs() << ErrorInfo.message() << '\n';
+        return 1;
+    }
+
+    Passes.add(new DDAPass());
+
+    Passes.add(createBitcodeWriterPass(Out->os()));
+
+    Passes.run(*M1.get());
+    Out->keep();
+
+#endif
 
     return 0;
 

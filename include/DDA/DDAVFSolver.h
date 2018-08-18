@@ -238,7 +238,7 @@ protected:
     }
 
     /// Build SVFG
-    virtual inline void buildSVFG(SVFModule module) {
+    virtual inline void buildSVFG(llvm::Module& module) {
         _ander = AndersenWaveDiff::createAndersenWaveDiff(module);
         _svfg = svfgBuilder.buildSVFG(_ander, true);
         _pag = _svfg->getPAG();

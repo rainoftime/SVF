@@ -17,7 +17,7 @@ static cl::opt<unsigned long long> cxtBudget("cxtbg",  cl::init(10000),
 /*!
  * Constructor
  */
-ContextDDA::ContextDDA(SVFModule m, DDAClient* client)
+ContextDDA::ContextDDA(llvm::Module& m, DDAClient* client)
     : CondPTAImpl<ContextCond>(PointerAnalysis::Cxt_DDA),DDAVFSolver<CxtVar,CxtPtSet,CxtLocDPItem>(),
       _client(client) {
     flowDDA = new FlowDDA(m, client);
@@ -35,7 +35,7 @@ ContextDDA::~ContextDDA() {
 /*!
  * Analysis initialization
  */
-void ContextDDA::initialize(SVFModule module) {
+void ContextDDA::initialize(llvm::Module& module) {
     CondPTAImpl<ContextCond>::initialize(module);
     buildSVFG(module);
     setCallGraph(getPTACallGraph());

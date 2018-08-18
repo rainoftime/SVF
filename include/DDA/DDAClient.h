@@ -26,11 +26,11 @@
  */
 class DDAClient {
 public:
-    DDAClient(SVFModule mod) : pag(NULL), module(mod), curPtr(0), solveAll(true) {}
+    DDAClient(llvm::Module& mod) : pag(NULL), module(mod), curPtr(0), solveAll(true) {}
 
     virtual ~DDAClient() {}
 
-    virtual inline void initialise(SVFModule module) {}
+    virtual inline void initialise(llvm::Module& module) {}
 
     /// Collect candidate pointers for query.
     virtual inline NodeBS& collectCandidateQueries(PAG* p) {
@@ -64,14 +64,14 @@ public:
         solveAll = false;
     }
     /// Get LLVM module
-    inline SVFModule getModule() const {
+    inline llvm::Module& getModule() const {
         return module;
     }
     virtual void answerQueries(PointerAnalysis* pta);
 
     virtual inline void performStat(PointerAnalysis* pta) {}
 
-    virtual inline void collectWPANum(SVFModule mod) {}
+    virtual inline void collectWPANum(llvm::Module& mod) {}
 protected:
     void addCandidate(NodeID id) {
         if (pag->isValidTopLevelPtr(pag->getPAGNode(id)))
@@ -79,7 +79,7 @@ protected:
     }
 
     PAG*   pag;					///< PAG graph used by current DDA analysis
-    SVFModule module;		///< LLVM module
+    llvm::Module& module;		///< LLVM module
     NodeID curPtr;				///< current pointer being queried
     NodeBS candidateQueries;	///< store all candidate pointers to be queried
 
@@ -97,7 +97,7 @@ private:
     typedef std::map<NodeID,llvm::CallSite> VTablePtrToCallSiteMap;
     VTablePtrToCallSiteMap vtableToCallSiteMap;
 public:
-    FunptrDDAClient(SVFModule module) : DDAClient(module) {}
+    FunptrDDAClient(llvm::Module& module) : DDAClient(module) {}
     ~FunptrDDAClient() {}
 
     /// Only collect function pointers as query candidates.
