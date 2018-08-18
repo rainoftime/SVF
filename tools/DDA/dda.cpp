@@ -8,7 +8,7 @@
 //#include "MemoryModel/ComTypeModel.h"
 #include "DDA/DDAPass.h"
 
-#include <llvm-c/Core.h> // for LLVMGetGlobalContext()
+//#include <llvm-c/Core.h> // for LLVMGetGlobalContext()
 #include <llvm/Support/CommandLine.h>	// for cl
 #include <llvm/Support/FileSystem.h>	// for sys::fs::F_None
 #include <llvm/Bitcode/BitcodeWriterPass.h>  // for bitcode write
@@ -19,24 +19,25 @@
 #include <llvm/Support/PrettyStackTrace.h> // for pass list
 #include <llvm/IR/LLVMContext.h>		// for llvm LLVMContext
 #include <llvm/Support/SourceMgr.h> // for SMDiagnostic
-#include <llvm/Bitcode/BitcodeWriterPass.h>		// for createBitcodeWriterPass
+//#include <llvm/Bitcode/BitcodeWriterPass.h>		// for createBitcodeWriterPass
 #include <llvm/Bitcode/ReaderWriter.h>      // for createBitcodeWriterPass
 #include <ctime>
+#include <iostream>
 #include <sys/time.h>
 using namespace llvm;
 
-using namespace llvm;
 
 static cl::opt<std::string> InputFilename(cl::Positional,
         cl::desc("<input bitcode>"), cl::init("-"));
 
-static cl::opt<bool>
-StandardCompileOpts("std-compile-opts",
-                    cl::desc("Include the standard compile time optimizations"));
+//static cl::opt<bool>
+//StandardCompileOpts("std-compile-opts",
+  //                  cl::desc("Include the standard compile time optimizations"));
 
 //static cl::list<const PassInfo*, bool, PassNameParser>
 //PassList(cl::desc("Optimizations available:"));
 
+/*
 static cl::opt<bool> DAA("daa", cl::init(false),
                          cl::desc("Demand-Driven Alias Analysis Pass"));
 
@@ -55,9 +56,10 @@ static cl::opt<bool> ENABLECONTEXT("cdaa", cl::init(false),
 static cl::opt<bool> ENABLEFLOW("ldaa", cl::init(false),
                                 cl::desc("enable flow-sensitivity for demand-driven analysis"));
 
-
+*/
 
 int main(int argc, char ** argv) {
+    std::cout << __LINE__ << "\n";
 #if 0
     int arg_num = 0;
     char **arg_value = new char*[argc];
