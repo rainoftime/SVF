@@ -69,8 +69,11 @@ public:
 
 
 int main(int argc, char ** argv) {
-    CaluTime timer;
-    timer.TimerBegin();
+    //CaluTime timer;
+    //timeir.TimerBegin();
+    std::clock_t start;
+    double duration;
+    start = std::clock();
     sys::PrintStackTraceOnErrorSignal();
     llvm::PrettyStackTraceProgram X(argc, argv);
 
@@ -127,9 +130,10 @@ int main(int argc, char ** argv) {
 
     Passes.run(*M1.get());
     Out->keep();
-    timer.TimerEnd();
-    double time = timer.TimerSpan();
-    llvm::outs() << "WPA time: " << time << "\n";
+    //timer.TimerEnd();
+    //double time = timer.TimerSpan();
+    duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+    llvm::outs() << "WPA time: " << duration << "\n";
     return 0;
 
 }
