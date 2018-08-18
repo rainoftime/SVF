@@ -4,8 +4,8 @@ dnl **************************************************************************
 AC_INIT([[[PTA]]],[[[1.0]]],[rockysui@gmail.com])
 
 dnl Identify where LLVM source tree is
-LLVM_SRC_ROOT="/home/ysui/llvm-3.8.0/llvm-3.8.0.src"
-LLVM_OBJ_ROOT="/home/ysui/llvm-3.8.0/llvm-3.8.0.obj"
+LLVM_SRC_ROOT="/home/peisen/LLVM/llvm3.6"
+LLVM_OBJ_ROOT="/home/peisen/LLVM/llvm3.6/build"
 
 dnl Tell autoconf that the auxilliary files are actually located in
 dnl the LLVM autoconf directory, not here.
@@ -14,7 +14,7 @@ AC_CONFIG_AUX_DIR(autoconf)
 dnl Tell autoconf that this is an LLVM project being configured
 dnl This provides the --with-llvmsrc and --with-llvmobj options
 LLVM_CONFIG_PROJECT($LLVM_SRC_ROOT,$LLVM_OBJ_ROOT)
-
+i
 dnl Verify that the source directory is valid
 AC_CONFIG_SRCDIR(["Makefile.common.in"])
 
@@ -28,9 +28,10 @@ AC_CONFIG_MAKEFILE(lib/Makefile)
 AC_CONFIG_MAKEFILE(lib/WPA/Makefile)
 AC_CONFIG_MAKEFILE(lib/MemoryModel/Makefile)
 AC_CONFIG_MAKEFILE(lib/Util/Makefile)
+AC_CONFIG_MAKEFILE(lib/DDA/Makefile)
 AC_CONFIG_MAKEFILE(tools/Makefile)
 AC_CONFIG_MAKEFILE(tools/WPA/Makefile)
-
+AC_CONFIG_MAKEFILE(tools/DDA/Makefile)
 dnl **************************************************************************
 dnl * Determine which system we are building on
 dnl **************************************************************************

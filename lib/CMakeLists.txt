@@ -16,6 +16,7 @@ set(SOURCES
     Util/PathCondAllocator.cpp
     Util/PTAStat.cpp
     Util/ThreadAPI.cpp
+    Util/SVFModule.cpp
     MemoryModel/ConsG.cpp
     MemoryModel/LocationSet.cpp
     MemoryModel/LocMemModel.cpp
@@ -44,13 +45,27 @@ set(SOURCES
     WPA/AndersenStat.cpp
     WPA/AndersenWave.cpp
     WPA/AndersenWaveDiff.cpp
+    WPA/AndersenWaveDiffWithType.cpp
     WPA/FlowSensitive.cpp
     WPA/FlowSensitiveStat.cpp
-    WPA/WPAPass.cpp)
+    WPA/WPAPass.cpp
+    DDA/ContextDDA.cpp
+    DDA/DDAClient.cpp
+    DDA/DDAPass.cpp
+    DDA/DDAStat.cpp
+    DDA/FlowDDA.cpp)
 
 add_llvm_loadable_module(Svf ${SOURCES})
 add_llvm_Library(LLVMSvf ${SOURCES})
 
+link_directories( ${CMAKE_BINARY_DIR}/lib/Cudd )
+llvm_map_components_to_libnames(llvm_libs bitwriter core ipo irreader instcombine instrumentation target linker analysis scalaropts support )
+target_link_libraries(LLVMSvf ${llvm_libs})
+if ( CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    target_link_libraries(Svf LLVMCudd ${llvm_libs})
+else()
+    target_link_libraries(Svf ${llvm_libs})
+endif()
 
 if(DEFINED IN_SOURCE_BUILD)
     add_dependencies(Svf intrinsics_gen)

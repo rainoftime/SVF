@@ -8,6 +8,6 @@ LEVEL=..
 #
 # List all of the subdirectories that we will compile.
 #
-DIRS= WPA SABER 
+DIRS= WPA SABER DDA
 
 include $(LEVEL)/Makefile.common
