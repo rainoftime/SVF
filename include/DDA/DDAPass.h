@@ -62,7 +62,7 @@ public:
     virtual void selectClient(llvm::Module& module);
 
     /// Pass name
-    virtual inline llvm::StringRef getPassName() const {
+    virtual inline const char* getPassName() const {
         return "DDAPass";
     }
 

@@ -166,6 +166,11 @@ public:
     inline llvm::Module* getModule() const {
         return mod;
     }
+
+    inline llvm::Module& getModuleRef() const {
+        return *mod;
+    }
+
     /// Get all Valid Pointers for resolution
     inline NodeBS& getAllValidPtrs() {
         return pag->getAllValidPtrs();
