@@ -105,7 +105,7 @@ void DDAPass::selectClient(llvm::Module& module) {
 }
 
 /// Create pointer analysis according to specified kind and analyze the module.
-void DDAPass::runPointerAnalysis(llvm::Module&, u32_t kind)
+void DDAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
 {
 
     VFPathCond::setMaxPathLen(maxPathLen);

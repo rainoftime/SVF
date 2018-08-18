@@ -45,10 +45,12 @@ public:
         return this;
     }
 
+    /*
     /// Interface expose to users of our pointer analysis, given Location infos
     virtual inline llvm::AliasAnalysis::AliasResult alias(const llvm::MemoryLocation &LocA, const llvm::MemoryLocation &LocB) {
         return alias(LocA.Ptr, LocB.Ptr);
     }
+    */
 
     /// Interface expose to users of our pointer analysis, given Value infos
     virtual llvm::AliasAnalysis::AliasResult alias(const llvm::Value* V1,	const llvm::Value* V2);
