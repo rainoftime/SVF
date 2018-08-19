@@ -1744,7 +1744,7 @@ fi
   ac_config_commands="$ac_config_commands setup"
 
 
-i
+
 
 
 ac_config_files="$ac_config_files Makefile.common"
@@ -1756,6 +1756,9 @@ ac_config_commands="$ac_config_commands Makefile"
 ac_config_commands="$ac_config_commands lib/Makefile"
 
 
+ac_config_commands="$ac_config_commands lib/DDA/Makefile"
+
+
 ac_config_commands="$ac_config_commands lib/WPA/Makefile"
 
 
@@ -1763,9 +1766,6 @@ ac_config_commands="$ac_config_commands lib/MemoryModel/Makefile"
 
 
 ac_config_commands="$ac_config_commands lib/Util/Makefile"
-
-
-ac_config_commands="$ac_config_commands lib/DDA/Makefile"
 
 
 ac_config_commands="$ac_config_commands tools/Makefile"
@@ -2504,10 +2504,10 @@ do
     "Makefile.common") CONFIG_FILES="$CONFIG_FILES Makefile.common" ;;
     "Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS Makefile" ;;
     "lib/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/Makefile" ;;
+    "lib/DDA/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/DDA/Makefile" ;;
     "lib/WPA/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/WPA/Makefile" ;;
     "lib/MemoryModel/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/MemoryModel/Makefile" ;;
     "lib/Util/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/Util/Makefile" ;;
-    "lib/DDA/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS lib/DDA/Makefile" ;;
     "tools/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/Makefile" ;;
     "tools/WPA/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/WPA/Makefile" ;;
     "tools/DDA/Makefile") CONFIG_COMMANDS="$CONFIG_COMMANDS tools/DDA/Makefile" ;;
@@ -2933,14 +2933,14 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/Makefile Makefile ;;
     "lib/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/Makefile lib/Makefile ;;
+    "lib/DDA/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/DDA/Makefile`
+   ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/DDA/Makefile lib/DDA/Makefile ;;
     "lib/WPA/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/WPA/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/WPA/Makefile lib/WPA/Makefile ;;
     "lib/MemoryModel/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/MemoryModel/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/MemoryModel/Makefile lib/MemoryModel/Makefile ;;
     "lib/Util/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/Util/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/Util/Makefile lib/Util/Makefile ;;
-    "lib/DDA/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname lib/DDA/Makefile`
-   ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/lib/DDA/Makefile lib/DDA/Makefile ;;
     "tools/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname tools/Makefile`
    ${SHELL} ${llvm_src}/autoconf/install-sh -m 0644 -c ${srcdir}/tools/Makefile tools/Makefile ;;
     "tools/WPA/Makefile":C) ${llvm_src}/autoconf/mkinstalldirs `dirname tools/WPA/Makefile`
