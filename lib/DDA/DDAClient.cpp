@@ -64,8 +64,11 @@ void DDAClient::answerQueries(PointerAnalysis* pta) {
 }
 
 void FunptrDDAClient::performStat(PointerAnalysis* pta) {
-
+    // It seems SUPA will combine the results of anderPts and ddaPts,
+    // and only print virtual table results.
+#if 0
     AndersenWaveDiff* ander = AndersenWaveDiff::createAndersenWaveDiff(pta->getModuleRef());
+
     u32_t totalCallsites = 0;
     u32_t morePreciseCallsites = 0;
     u32_t zeroTargetCallsites = 0;
@@ -96,7 +99,7 @@ void FunptrDDAClient::performStat(PointerAnalysis* pta) {
         else
             moreThanTwoCallsites++;
 
-        if(ddaPts.count() >= anderPts.count() || ddaPts.empty())
+        if (ddaPts.count() >= anderPts.count() || ddaPts.empty())
             continue;
 
         std::set<const Function*> ander_vfns;
@@ -130,5 +133,62 @@ void FunptrDDAClient::performStat(PointerAnalysis* pta) {
     outs() << "Two target callsites: " << twoTargetCallsites << "\n";
     outs() << "More than two target callsites: " << moreThanTwoCallsites << "\n";
     outs() << "=================================================\n";
+#else
+    int CG_BUCKET_NUMBER = 11;
+    int cg_bucket[11] = { 0 };
+    int cg_bucket_steps[11] = { 0, 1, 2, 3, 4, 5, 6, 7, 10, 30, 100 };
+
+    llvm::outs() << "==================Function Pointer Targets==================\n";
+    const CallEdgeMap& callEdges = pta->getIndCallMap();
+    if (callEdges.size() == 0) llvm::outs() << "CallEdgeMap is empty\n";
+    CallEdgeMap::const_iterator it = callEdges.begin();
+    CallEdgeMap::const_iterator eit = callEdges.end();
+    for (; it != eit; ++it) {
+        const llvm::CallSite cs = it->first;
+        const FunctionSet& targets = it->second;
+        int cg_resolve_size = targets.size();
+        int i;
+        for (i = 0; i < CG_BUCKET_NUMBER - 1; i++) {
+            if (cg_resolve_size < cg_bucket_steps[i + 1]) {
+                cg_bucket[i]++;
+                break;
+            }
+        }
+        if (i == CG_BUCKET_NUMBER - 1) {
+            cg_bucket[i]++;
+        }
+    }
+
+    const CallSiteToFunPtrMap& indCS = pta->getIndirectCallsites();
+    CallSiteToFunPtrMap::const_iterator csIt = indCS.begin();
+    CallSiteToFunPtrMap::const_iterator csEit = indCS.end();
+    int cg_zero = 0;
+    for (; csIt != csEit; ++csIt) {
+        const llvm::CallSite& cs = csIt->first;
+        if (pta->hasIndCSCallees(cs) == false) {
+            // do not consider inline asm now
+            if (!isa<InlineAsm>(cs.getCalledValue())) cg_zero++;
+        }
+    }
+
+    cg_bucket[0] = cg_zero;
+
+    llvm::outs() << "\n";
+    llvm::outs() << "---------------CG Resolution Statistics Begin-------------------------\n";
+    outs() << "\n";
+
+    int i;
+    for (i = 0; i < CG_BUCKET_NUMBER - 1; i++) {
+        if (cg_bucket_steps[i] == cg_bucket_steps[i + 1] - 1)
+            llvm::outs() << "\t" << cg_bucket_steps[i] << ":\t\t";
+        else
+            llvm::outs() << "\t" << cg_bucket_steps[i] << " - " << cg_bucket_steps[i + 1] - 1 << ": \t\t";
+        llvm::outs() << cg_bucket[i] << "\n";
+    }
+    llvm::outs() << "\t>" << cg_bucket_steps[i] << ": \t\t";
+    llvm::outs() << cg_bucket[i] << "\n";
+    llvm::outs() << "\n";
+    llvm::outs() << "---------------CG Resolution Statistics End-------------------------\n";
+#endif
 }
 

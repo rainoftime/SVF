@@ -72,6 +72,15 @@ public:
     virtual inline void performStat(PointerAnalysis* pta) {}
 
     virtual inline void collectWPANum(llvm::Module& mod) {}
+
+    /// Indirect call edges type, map a callsite to a set of callees
+    //@{
+    typedef std::set<llvm::CallSite> CallSiteSet;
+    typedef PAG::CallSiteToFunPtrMap CallSiteToFunPtrMap;
+    typedef std::set<const llvm::Function*> FunctionSet;
+    typedef std::map<llvm::CallSite, FunctionSet> CallEdgeMap;
+    typedef SCCDetection<PTACallGraph*> CallGraphSCC;
+    //@}
 protected:
     void addCandidate(NodeID id) {
         if (pag->isValidTopLevelPtr(pag->getPAGNode(id)))
