@@ -64,6 +64,7 @@ void DDAClient::answerQueries(PointerAnalysis* pta) {
 }
 
 void FunptrDDAClient::performStat(PointerAnalysis* pta) {
+    llvm::outs() << "Print stat for demand driven analysis!\n";
     // It seems SUPA will combine the results of anderPts and ddaPts,
     // and only print virtual table results.
 #if 0
@@ -137,7 +138,7 @@ void FunptrDDAClient::performStat(PointerAnalysis* pta) {
     int CG_BUCKET_NUMBER = 11;
     int cg_bucket[11] = { 0 };
     int cg_bucket_steps[11] = { 0, 1, 2, 3, 4, 5, 6, 7, 10, 30, 100 };
-
+ 
     llvm::outs() << "==================Function Pointer Targets==================\n";
     const CallEdgeMap& callEdges = pta->getIndCallMap();
     if (callEdges.size() == 0) llvm::outs() << "CallEdgeMap is empty\n";

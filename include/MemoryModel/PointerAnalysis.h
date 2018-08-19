@@ -202,11 +202,13 @@ public:
     /// Interface exposed to users of our pointer analysis, given PAGNodeID
     virtual AliasAnalysis::AliasResult alias(NodeID node1, NodeID node2) = 0;
 
-protected:
+
     /// Return all indirect callsites
-    inline const CallSiteToFunPtrMap& getIndirectCallsites() const {
-        return pag->getIndirectCallsites();
-    }
+    //inline const CallSiteToFunPtrMap& getIndirectCallsites() const {
+    //    return pag->getIndirectCallsites();
+    //}
+
+protected:
     /// Return function pointer PAGNode at a callsite cs
     inline NodeID getFunPtr(const llvm::CallSite& cs) const {
         return pag->getFunPtr(cs);
@@ -225,6 +227,11 @@ protected:
     void resetObjFieldSensitive();
 
 public:
+    // Return all indirect callsites
+    inline const CallSiteToFunPtrMap& getIndirectCallsites() const {
+        return pag->getIndirectCallsites();
+    }
+
     /// Dump the statistics
     void dumpStat();
 

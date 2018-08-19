@@ -159,10 +159,10 @@ void DDAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
             _pta->dumpCPts();
         }
 
-        if (_pta->printStat()) {
+        //if (_pta->printStat()) {
             //llvm::outs() << __LINE__ << "\n";
-            _client->performStat(_pta);
-        }
+        _client->performStat(_pta);
+        //}
 
         if (printQueryPts) {
             printQueryPTS();

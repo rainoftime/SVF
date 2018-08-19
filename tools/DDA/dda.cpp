@@ -59,7 +59,6 @@ static cl::opt<bool> ENABLEFLOW("ldaa", cl::init(false),
 */
 
 int main(int argc, char ** argv) {
-    std::cout << __LINE__ << "\n";
 #if 0
     int arg_num = 0;
     char **arg_value = new char*[argc];
