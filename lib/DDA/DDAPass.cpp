@@ -100,7 +100,7 @@ void DDAPass::selectClient(llvm::Module& module) {
 
     if (!userInputQuery.empty()) {
         /// solve function pointer
-        if(userInputQuery == "funptr") {
+        if (userInputQuery == "funptr") {
             _client = new FunptrDDAClient(module);
         }
         /// allow user specify queries
@@ -143,7 +143,7 @@ void DDAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         break;
     }
 
-    if(WPANUM) {
+    if (WPANUM) {
         _client->collectWPANum(module);
     }
     else {
@@ -153,14 +153,20 @@ void DDAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         answerQueries(_pta);
         ///finalize
         _pta->finalize();
-        if(printCPts)
+        //llvm::outs() << __LINE__ << "\n";
+
+        if (printCPts) {
             _pta->dumpCPts();
+        }
 
-        if (_pta->printStat())
+        if (_pta->printStat()) {
+            //llvm::outs() << __LINE__ << "\n";
             _client->performStat(_pta);
+        }
 
-        if (printQueryPts)
+        if (printQueryPts) {
             printQueryPTS();
+        }
     }
 }
 
