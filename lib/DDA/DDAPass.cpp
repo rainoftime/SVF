@@ -47,13 +47,20 @@ static RegisterPass<DDAPass> DDAPA("dda", "Demand-driven Pointer Analysis Pass")
 /// register this into alias analysis group
 //static RegisterAnalysisGroup<AliasAnalysis> AA_GROUP(DDAPA);
 
+#if 0
 static cl::bits<PointerAnalysis::PTATY> DDASelected(cl::desc("Select pointer analysis"),
         cl::values(
             clEnumValN(PointerAnalysis::FlowS_DDA, "dfs", "Demand-driven flow sensitive analysis"),
             clEnumValN(PointerAnalysis::Cxt_DDA, "cxt", "Demand-driven context- flow- sensitive analysis")
         ));
+#else
 
+static cl::opt<bool> FlowSDDA("dda-dfs", cl::init(true),
+                               cl::desc("Demand-driven flow sensitive analysis "));
 
+static cl::opt<bool> CtxDDA("dda-ctx", cl::init(false),
+                               cl::desc("Demand-driven context- flow- sensitive analysis "));
+#endif
 
 DDAPass::~DDAPass() {
     // _pta->dumpStat();
@@ -69,11 +76,21 @@ bool DDAPass::runOnModule(llvm::Module& module)
 
     selectClient(module);
 
+#if 0
     for (u32_t i = PointerAnalysis::FlowS_DDA;
             i < PointerAnalysis::Default_PTA; i++) {
         if (DDASelected.isSet(i))
             runPointerAnalysis(module, i);
     }
+#else
+    if (FlowSDDA && !CtxDDA) {
+        runPointerAnalysis(module, PointerAnalysis::FlowS_DDA);
+    } else if (CtxDDA) {
+        runPointerAnalysis(module, PointerAnalysis::Cxt_DDA);
+    } else {
+        runPointerAnalysis(module, PointerAnalysis::FlowS_DDA);
+    }
+#endif
 
     return false;
 }
