@@ -70,7 +70,7 @@ cl::opt<bool> anderSVFG("svfg", cl::init(false),
                         cl::desc("Generate SVFG after Andersen's Analysis"));
 
 
-cl::opt<StringRef> dumpCallers("dump-caller-for-func", cl::init(""),
+static cl::opt<std::string> dumpCallers("dump-caller-for-func", cl::init(""),
         cl::desc("Dump the callers of a configured function"));
 
 
@@ -166,7 +166,7 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
                 for (; it != eit; ++it) {
                     const llvm::CallSite CS = it->first;
                     const FunctionSet& targets = it->second;
-                    for (Function* f : targets) {
+                    for (const Function* f : targets) {
                         if (f == func) {
                             llvm::outs() << " indirect call targets!!!\n";
                             llvm::outs() << CS->getParent()->getParent()->getName() << "\n";
