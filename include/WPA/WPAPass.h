@@ -49,6 +49,9 @@
 class WPAPass: public llvm::ModulePass, public llvm::AliasAnalysis {
     typedef std::vector<PointerAnalysis*> PTAVector;
 
+    typedef std::set<const llvm::Function*> FunctionSet;
+    typedef std::map<llvm::CallSite, FunctionSet> CallEdgeMap;
+
 public:
     /// Pass ID
     static char ID;

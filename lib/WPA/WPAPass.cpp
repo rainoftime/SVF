@@ -37,6 +37,7 @@
 #include "WPA/WPAPass.h"
 #include "WPA/Andersen.h"
 #include "WPA/FlowSensitive.h"
+#include "Util/AddressTakenAnalysis.h"
 #include <llvm/Support/CommandLine.h>
 
 using namespace llvm;
@@ -67,6 +68,11 @@ static cl::bits<WPAPass::AliasCheckRule> AliasRule(cl::desc("Select alias check 
 
 cl::opt<bool> anderSVFG("svfg", cl::init(false),
                         cl::desc("Generate SVFG after Andersen's Analysis"));
+
+
+cl::opt<StringRef> dumpCallers("dump-caller-for-func", cl::init(""),
+        cl::desc("Dump the callers of a configured function"));
+
 
 /*!
  * Destructor
@@ -130,6 +136,45 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         SVFGBuilder memSSA(true);
         SVFG *svfg = memSSA.buildSVFG((BVDataPTAImpl*)_pta);
         svfg->dump("ander_svfg");
+    }
+
+    if (dumpCallers != "") {
+        Function* func = nullptr;
+        for (Module::iterator FI = module.begin(), FE = module.end(); FI != FE; ++FI) {
+            if (FI->getName() == dumpCallers) {
+                func = FI;
+            }
+        }
+        if (func) {
+            llvm::outs() << "Find the configured function!!\n";
+            AddressTakenAnalysis ata(module);
+            if (!ata.isAddressTaken(func)) {
+                for (Value::const_use_iterator I = func->use_begin(), E = func->use_end(); I != E; ++I) {
+                    User *U = I->getUser ();
+                    if (isa<CallInst>(U) || isa<InvokeInst>(U)) {
+                        CallSite CS(cast<Instruction>(U));
+                        llvm::outs() << " direct call targets!!!\n";
+                        llvm::outs() << CS->getParent()->getParent()->getName() << "\n";
+                    }
+                }
+            } else {
+                //PTACallGraph* cg = _pta->getPTACallGraph();
+                //PTACallGraphNode* node = cg->getCallGraphNode(func);
+                const CallEdgeMap& callEdges = _pta->getIndCallMap();
+                CallEdgeMap::const_iterator it = callEdges.begin();
+                CallEdgeMap::const_iterator eit = callEdges.end();
+                for (; it != eit; ++it) {
+                    const llvm::CallSite CS = it->first;
+                    const FunctionSet& targets = it->second;
+                    for (Function* f : targets) {
+                        if (f == func) {
+                            llvm::outs() << " indirect call targets!!!\n";
+                            llvm::outs() << CS->getParent()->getParent()->getName() << "\n";
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
