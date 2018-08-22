@@ -220,7 +220,7 @@ void AddressTakenAnalysis::buildCG() {
     int cg_bucket[11] = { 0 };
     int cg_bucket_steps[11] = { 0, 1, 2, 3, 4, 5, 6, 7, 10, 30, 100 };
 
-    for (Function& f : M) {
+    for (Function& f : *M) {
         if (f.isDeclaration() || f.isIntrinsic()) {
             continue;
         }

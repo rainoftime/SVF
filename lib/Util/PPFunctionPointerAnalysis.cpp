@@ -2,6 +2,8 @@
 #include <llvm/IR/IntrinsicInst.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/ADT/Statistic.h>
+#include <llvm/IR/InstIterator.h>
+#include "Util/AnalysisUtil.h"
 #include "Util/PPFunctionPointerAnalysis.h"
 
 #define DEBUG_TYPE "PPPPFunctionPointerAnalysis"

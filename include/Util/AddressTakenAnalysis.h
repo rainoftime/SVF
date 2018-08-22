@@ -12,15 +12,15 @@ using namespace llvm;
 
 class AddressTakenAnalysis {
     // address taken analysis for functions
-    Module& M;
+    Module* M;
     int callees_num_limit;
     bool enable_field_prunning;
     std::unordered_set<Function*> address_taken_functions;
 
 public:
     AddressTakenAnalysis(Module& _M) : callees_num_limit(10), enable_field_prunning(false) {
-        M = _M;
-        for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
+        M = &_M;
+        for (Module::iterator FI = M->begin(), FE = M->end(); FI != FE; ++FI) {
             if (isAddressTaken(FI)) {
                 address_taken_functions.insert(FI);
             }
