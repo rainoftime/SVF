@@ -44,6 +44,7 @@ static cl::opt<bool> TaintUninitHeap("uninit-heap", cl::init(true),
 static cl::opt<bool> TaintUninitStack("uninit-stack", cl::init(true),
                                       cl::desc("detect uninitialized stack variables"));
 
+
 void DDAClient::answerQueries(PointerAnalysis* pta) {
 
     collectCandidateQueries(pta->getPAG());
@@ -168,7 +169,12 @@ void FunptrDDAClient::performStat(PointerAnalysis* pta) {
         const llvm::CallSite& cs = csIt->first;
         if (pta->hasIndCSCallees(cs) == false) {
             // do not consider inline asm now
-            if (!isa<InlineAsm>(cs.getCalledValue())) cg_zero++;
+            if (!isa<InlineAsm>(cs.getCalledValue())) {
+                cg_zero++;
+                Function* f = cs->getParent()->getParent();
+                llvm::outs() << f->getName() << ": a call site unresolved\n";
+                cs->dump();
+            }
         }
     }
 
