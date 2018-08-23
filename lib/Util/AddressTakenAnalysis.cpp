@@ -293,34 +293,25 @@ void AddressTakenAnalysis::buildCG() {
         }
         for (BasicBlock& bb : f) {
             for (Instruction& inst : bb) {
-                CallSite CS(&inst);
-                if (CS.isCall() || CS.isInvoke()) {
-                    Function *callee = CS.getCalledFunction();
+                CallSite cs(&inst);
+                if (cs.isCall() || cs.isInvoke()) {
+                    Function *callee = cs.getCalledFunction();
                     if (!callee) {
-                        if (cppUtil::isVirtualCallSite(CS) || isa<InlineAsm>(CS.getCalledValue())) {
+                        if (cppUtil::isVirtualCallSite(cs) || isa<InlineAsm>(cs.getCalledValue())) {
                             continue;
                         } else {
-                            Value* callee_val = CS.getCalledValue();
-                            std::unordered_set<Function*> matched_address_taken_funcs;
-                            for (Function* func : address_taken_functions) {
-                                if (isCallsiteFunctionStrictCompatible(CS, func)) {
-                                    matched_address_taken_funcs.insert(func);
+                            std::unordered_set<Function*> result;
+                            guessCalleesForIndCallSite(cs, result);
+                            int i;
+                            int cg_resolve_size = result.size();
+                            for (i = 0; i < CG_BUCKET_NUMBER - 1; i++) {
+                                if (cg_resolve_size < cg_bucket_steps[i + 1]) {
+                                    cg_bucket[i]++;
+                                    break;
                                 }
                             }
-                            // Look for how the "address taken" happens
-                            if (matched_address_taken_funcs.size() == 0) {
-                                cg_bucket[0]++;
-                            } else if (matched_address_taken_funcs.size() >= 1) {
-                                int i;
-                                for (i = 0; i < CG_BUCKET_NUMBER - 1; i++) {
-                                    if (matched_address_taken_funcs.size() < cg_bucket_steps[i + 1]) {
-                                        cg_bucket[i]++;
-                                        break;
-                                    }
-                                }
-                                if (i == CG_BUCKET_NUMBER - 1) {
-                                    cg_bucket[i]++;
-                                }
+                            if (i == CG_BUCKET_NUMBER - 1) {
+                                cg_bucket[i]++;
                             }
                         }
                     }

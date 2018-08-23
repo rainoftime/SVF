@@ -19,7 +19,7 @@ class AddressTakenAnalysis {
     std::unordered_set<Function*> address_taken_functions;
 
 public:
-    AddressTakenAnalysis(Module& _M) : callees_num_limit(10), enable_field_prunning(false) {
+    AddressTakenAnalysis(Module& _M) : callees_num_limit(10), enable_field_prunning(true) {
         M = &_M;
         default_ptrsz = M->getDataLayout()->getPointerSizeInBits();
         for (Module::iterator FI = M->begin(), FE = M->end(); FI != FE; ++FI) {
