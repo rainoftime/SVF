@@ -16,11 +16,11 @@ PPFunctionPointerAnalysis::PPFunctionPointerAnalysis() {
 }
 
 PPFunctionPointerAnalysis::~PPFunctionPointerAnalysis() {
-    callsite_targets.clear();
+    //callsite_targets.clear();
 }
 
 void PPFunctionPointerAnalysis::run(Function* func, CallSite CS) {
-    m_cs = CS;
+    //m_cs = CS;
     Value* callee_val = CS.getCalledValue();
     processFuncPtr(callee_val);
 }

@@ -11,7 +11,7 @@ using namespace llvm;
 
 class PPFunctionPointerAnalysis {
 private:
-    CallSite m_cs;
+    //CallSite m_cs;
     int verbose_lvl = 0;
     unsigned analyze_inst_count;
 

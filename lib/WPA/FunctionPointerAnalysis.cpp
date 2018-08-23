@@ -27,13 +27,13 @@ void FunctionPointerAnalysis::buildCG() {
                             PPFunctionPointerAnalysis* pfa = new PPFunctionPointerAnalysis();
                             pfa->run(&f, cs);
                             if (pfa->callsite_targets.size() >= 1) {
-                                outs() << "PPFptrAna finds the following functions\n";
+                                //outs() << "PPFptrAna finds the following functions\n";
                                 for (Function* func : pfa->callsite_targets) {
-                                    outs() << func->getName() << "\n";
+                                    //outs() << func->getName() << "\n";
                                     result.insert(func);
                                 }
                             } else {
-                                // First, use AddressTakenFunctionAnalysis
+                                // Then, use AddressTakenFunctionAnalysis
                                 AddressTakenAnalysis* ata = new AddressTakenAnalysis(*M);
                                 ata->guessCalleesForIndCallSite(cs, result);
                             }

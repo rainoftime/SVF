@@ -55,6 +55,7 @@ class WPAPass: public llvm::ModulePass, public llvm::AliasAnalysis {
 public:
     /// Pass ID
     static char ID;
+    bool func_ptr_mode = false;
 
     enum AliasCheckRule {
         Conservative,	///< return MayAlias if any pta says alias

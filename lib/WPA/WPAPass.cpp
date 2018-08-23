@@ -110,6 +110,7 @@ bool WPAPass::runOnModule(llvm::Module& module)
  */
 void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
 {
+    FunctionPointerAnalysis* fpa = nullptr;
     /// Initialize pointer analysis.
     switch (kind) {
     case PointerAnalysis::Andersen_WPA:
@@ -128,17 +129,21 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         _pta = new FlowSensitive();
         break;
     case PointerAnalysis::FUNCPTR_ANA:
-        //_pta= new Andersen();
-        FunctionPointerAnalysis* fpa = new FunctionPointerAnalysis(module);
+        func_ptr_mode = true;
+        _pta= new Andersen(); // TODO: wo do not need to create this
+        fpa = new FunctionPointerAnalysis(module);
         fpa->buildCG();
-        return;
+        break;
     default:
         llvm::outs() << "This pointer analysis has not been implemented yet.\n";
         break;
     }
 
+    //if (func_ptr_mode) return;
+
     ptaVector.push_back(_pta);
-    _pta->analyze(module);
+    if (_pta && !func_ptr_mode)
+        _pta->analyze(module);
     if (anderSVFG) {
         SVFGBuilder memSSA(true);
         SVFG *svfg = memSSA.buildSVFG((BVDataPTAImpl*)_pta);

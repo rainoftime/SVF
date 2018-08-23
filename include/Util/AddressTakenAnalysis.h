@@ -19,7 +19,7 @@ class AddressTakenAnalysis {
     std::unordered_set<Function*> address_taken_functions;
 
 public:
-    AddressTakenAnalysis(Module& _M) : callees_num_limit(10), enable_field_prunning(true) {
+    AddressTakenAnalysis(Module& _M) : callees_num_limit(15), enable_field_prunning(true) {
         M = &_M;
         default_ptrsz = M->getDataLayout()->getPointerSizeInBits();
         for (Module::iterator FI = M->begin(), FE = M->end(); FI != FE; ++FI) {
@@ -29,9 +29,9 @@ public:
         }
     }
     ~AddressTakenAnalysis() {
-        address_taken_functions.clear();
+        //address_taken_functions.clear();
     }
-    uint64_t getTypeSizeInBits(Type *Ty) const;
+    uint64_t getTypeSizeInBits(Type *Ty);
     unsigned getGepConstantOffset(GetElementPtrInst* gep);
     int addressTakenFuncStoreIndexBase(Function *func);
     bool isAddressTaken(Value *V);

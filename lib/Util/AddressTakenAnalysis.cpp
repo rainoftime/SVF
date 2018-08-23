@@ -6,7 +6,7 @@
 using namespace llvm;
 
 
-uint64_t AddressTakenAnalysis::getTypeSizeInBits(Type *Ty) const {
+uint64_t AddressTakenAnalysis::getTypeSizeInBits(Type *Ty) {
     assert(Ty);
 
     switch (Ty->getTypeID()) {
