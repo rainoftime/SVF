@@ -3,6 +3,7 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/ADT/Statistic.h>
 #include <llvm/IR/InstIterator.h>
+#include <llvm/IR/Constants.h>
 #include "Util/AnalysisUtil.h"
 #include "Util/PPFunctionPointerAnalysis.h"
 
@@ -37,16 +38,20 @@ void PPFunctionPointerAnalysis::processFuncPtr(Value* funcptr) {
     if (Argument* argument = dyn_cast<Argument>(funcptr)) {
         // the function pointer may be passed by the arg, get the use of the argument
         processFuncPtrArgFuncptr(argument);
-    } else if (PHINode* phi_node = dyn_cast<PHINode>(funcptr)) {
+    }
+    else if (PHINode* phi_node = dyn_cast<PHINode>(funcptr)) {
         // TODO
         processFuncPtrPhiNode(phi_node);
-    } else if (CallInst* call_inst = dyn_cast<CallInst>(funcptr)) {
+    }
+    else if (CallInst* call_inst = dyn_cast<CallInst>(funcptr)) {
         // the function pointer is a call instruction; recursively process?
         processFuncPtrCallInst(call_inst);
-    } else if (LoadInst* load_inst = dyn_cast<LoadInst>(funcptr)) {
+    } 
+    else if (LoadInst* load_inst = dyn_cast<LoadInst>(funcptr)) {
         // LoadInst seems to be the hardest ?..
         processFuncPtrLoadInst(load_inst);
-    } else if (CastInst* cast_inst = dyn_cast<CastInst>(funcptr)) {
+    }  
+    else if (CastInst* cast_inst = dyn_cast<CastInst>(funcptr)) {
         Value* cast_val = cast_inst->getOperand(0);
         if (Function *func = dyn_cast<Function>(cast_val)) {
             outs() << __LINE__ << ", PPFptrAnalysis find a function: " <<
@@ -62,10 +67,8 @@ void PPFunctionPointerAnalysis::processFuncPtr(Value* funcptr) {
 
 void PPFunctionPointerAnalysis::processFuncPtrLoadInst(LoadInst* load_inst) {
     // TODO: summarize the patterns of load to avoid redundancy ...
-    if (verbose_lvl > 1) outs() << "PPFPtrana load!!\n";
     Value* v = load_inst->getPointerOperand();
     if (GetElementPtrInst* gep_inst = dyn_cast<GetElementPtrInst>(v)) {
-        if (verbose_lvl > 1) outs() << __LINE__ << "\n";
         processFuncPtrGEPInst(gep_inst);
     } else {
         for (User* U : v->users()) {
@@ -79,14 +82,14 @@ void PPFunctionPointerAnalysis::processFuncPtrLoadInst(LoadInst* load_inst) {
                 } else if (PHINode* phi = dyn_cast<PHINode>(value)) {
                     processFuncPtrPhiNode(phi);
                 }
-            } else if (LoadInst* st = dyn_cast<LoadInst>(U)) {
+            }
+            else if (LoadInst* st = dyn_cast<LoadInst>(U)) {
                 Value* v_st = st->getOperand(0);
                 if (Function* func = dyn_cast<Function>(v_st)) {
                     outs() << __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
                     callsite_targets.insert(func);
-                } else if (isa<GlobalValue>(v_st)) {
-
-                } else if (ConstantExpr* val_exp = dyn_cast<ConstantExpr>(v_st)) {
+                }
+                /*else if (ConstantExpr* val_exp = dyn_cast<ConstantExpr>(v_st)) {
                     if (CastInst* cast_inst = dyn_cast<CastInst>(val_exp->getAsInstruction())) {
                         if (Function* func = dyn_cast<Function>(cast_inst->getOperand(0))) {
                             outs() << __LINE__ << ", PPFptrAnalysis find a function: " <<
@@ -94,7 +97,8 @@ void PPFunctionPointerAnalysis::processFuncPtrLoadInst(LoadInst* load_inst) {
                             callsite_targets.insert(func);
                         }
                     }
-                } else  {
+                }*/  
+                else  {
                     if (verbose_lvl > 1) outs() << __LINE__ << "\n";
                 }
             } else {
@@ -102,6 +106,7 @@ void PPFunctionPointerAnalysis::processFuncPtrLoadInst(LoadInst* load_inst) {
             }
         }
     }
+
 }
 
 void PPFunctionPointerAnalysis::processFuncPtrGEPInst(GetElementPtrInst* gep_inst) {
@@ -118,7 +123,7 @@ void PPFunctionPointerAnalysis::processFuncPtrGEPInst(GetElementPtrInst* gep_ins
                         if (Function* func = dyn_cast<Function>(vl)) {
                             outs() << __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
                             callsite_targets.insert(func);
-                        } else if (ConstantExpr* val_exp = dyn_cast<ConstantExpr>(vl)) {
+                        } /*else if (ConstantExpr* val_exp = dyn_cast<ConstantExpr>(vl)) {
                             if (CastInst* cast_inst = dyn_cast<CastInst>(val_exp->getAsInstruction())) {
                                 if (Function *func = dyn_cast<Function>(cast_inst->getOperand(0))) {
                                     outs() << __LINE__ << ", PPFptrAnalysis find a function: " <<
@@ -126,7 +131,7 @@ void PPFunctionPointerAnalysis::processFuncPtrGEPInst(GetElementPtrInst* gep_ins
                                     callsite_targets.insert(func);
                                 }
                             }
-                        } else if (CallInst* call = dyn_cast<CallInst>(vl)){
+                        } */else if (CallInst* call = dyn_cast<CallInst>(vl)){
                             if (verbose_lvl > 1) outs() << __LINE__ << "\n";
                             processFuncPtrCallInst(call);
                         }
@@ -178,7 +183,7 @@ bool PPFunctionPointerAnalysis::processFuncPtrCmpGEPInst(GetElementPtrInst * gep
 
 // process the function pointer that is passed by argument
 void PPFunctionPointerAnalysis::processFuncPtrArgFuncptr(Argument* argument) {
-    outs() << "PPFptrAna argu\n";
+    //outs() << "PPFptrAna argu\n";
     unsigned offset = argument->getArgNo();
     if (analyze_inst_count++ > 10) {
         return;   // In python and ar, there may be infinite loops here..
@@ -190,7 +195,7 @@ void PPFunctionPointerAnalysis::processFuncPtrArgFuncptr(Argument* argument) {
     for (User* U : parent->users()) {
         if (CallInst* call_inst_call = dyn_cast<CallInst>(U)) {
             Value* val = call_inst_call->getArgOperand(offset);
-            if (ConstantExpr* val_exp = dyn_cast<ConstantExpr>(val)) {
+            /*if (ConstantExpr* val_exp = dyn_cast<ConstantExpr>(val)) {
                 Instruction* val_exp_inst = val_exp->getAsInstruction();
                 if (CastInst* cast_inst = dyn_cast<CastInst>(val_exp_inst)) {
                     if (Function* func = dyn_cast<Function>(cast_inst->getOperand(0))) {
@@ -199,7 +204,7 @@ void PPFunctionPointerAnalysis::processFuncPtrArgFuncptr(Argument* argument) {
                         callsite_targets.insert(func);
                     }
                 }
-            } else if (Function* func = dyn_cast<Function>(val)) {
+            } */ if (Function* func = dyn_cast<Function>(val)) {
                 outs() <<  __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
                 callsite_targets.insert(func);
             } else if (PHINode* val_phi = dyn_cast<PHINode>(val)) {
