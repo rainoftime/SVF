@@ -36,6 +36,7 @@
 #include "MemoryModel/PointerAnalysis.h"
 #include "WPA/WPAPass.h"
 #include "WPA/Andersen.h"
+#include "WPA/FunctionPointerAnalysis.h"
 #include "WPA/FlowSensitive.h"
 #include "Util/AddressTakenAnalysis.h"
 #include <llvm/Support/CommandLine.h>
@@ -127,8 +128,10 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         _pta = new FlowSensitive();
         break;
     case PointerAnalysis::FUNCPTR_ANA:
-        _pta= new Andersen();
-        break;
+        //_pta= new Andersen();
+        FunctionPointerAnalysis* fpa = new FunctionPointerAnalysis(module);
+        fpa->buildCG();
+        return;
     default:
         llvm::outs() << "This pointer analysis has not been implemented yet.\n";
         break;
@@ -141,6 +144,8 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         SVFG *svfg = memSSA.buildSVFG((BVDataPTAImpl*)_pta);
         svfg->dump("ander_svfg");
     }
+
+#if 0
 
     if (dumpCallers != "") {
         Function* func = nullptr;
@@ -180,6 +185,7 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
             }
         }
     }
+#endif
 }
 
 
