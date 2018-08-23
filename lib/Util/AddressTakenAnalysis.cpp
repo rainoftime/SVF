@@ -5,6 +5,36 @@
 #include <unordered_set>
 using namespace llvm;
 
+
+uint64_t AddressTakenAnalysis::getTypeSizeInBits(Type *Ty) const {
+    assert(Ty);
+
+    switch (Ty->getTypeID()) {
+    case Type::HalfTyID: return 16;
+    case Type::FloatTyID: return 32;
+    case Type::DoubleTyID: return 64;
+    case Type::X86_FP80TyID: return 80;
+    case Type::FP128TyID: return 128;
+    case Type::PPC_FP128TyID: return 128;
+    case Type::X86_MMXTyID: return 64;
+    case Type::PointerTyID: return default_ptrsz;
+    case Type::IntegerTyID: return Ty->getIntegerBitWidth();
+    case Type::VectorTyID:
+        return Ty->getVectorNumElements() * getTypeSizeInBits(Ty->getVectorElementType());
+    case Type::ArrayTyID:
+        return Ty->getArrayNumElements() * getTypeSizeInBits(Ty->getArrayElementType());
+    case Type::StructTyID: {
+        uint64_t Sz = 0;
+        for (unsigned I = 0; I < Ty->getStructNumElements(); I++) {
+            Sz += getTypeSizeInBits(Ty->getStructElementType(I));
+        }
+        return Sz;
+    }
+    default:
+        return 0;
+    }
+}
+
 unsigned AddressTakenAnalysis::getGepConstantOffset(GetElementPtrInst* gep) {
     unsigned ret = 40085;
     Value* val = gep->getOperand(0);
@@ -22,9 +52,46 @@ unsigned AddressTakenAnalysis::getGepConstantOffset(GetElementPtrInst* gep) {
 }
 
 int AddressTakenAnalysis::addressTakenFuncStoreIndexBase(Function *func) {
-    // FIXME
-    // This needs datalayout analysis
-    return 0;
+    int ret = 40086;
+    for (Value::const_use_iterator I = func->use_begin(), E = func->use_end(); I != E; ++I) {
+        User* U = I->getUser ();
+        if (isa<StoreInst>(U)) {
+            //U->dump();
+            if (StoreInst* store_inst = dyn_cast<StoreInst>(U)) {
+                if (store_inst->getNumOperands() >= 2) {
+                    Value* target = store_inst->getOperand(1);
+                    //target->dump();
+                    if (GetElementPtrInst *gep = dyn_cast<GetElementPtrInst>(target)) {
+                        unsigned offset = getGepConstantOffset(gep);
+                        if (offset != 40085) {
+                            return offset;
+                        }
+                    }
+                }
+            }
+        } else if (isa<Constant>(U)) {
+            if (ConstantStruct* pt_val = dyn_cast<ConstantStruct>(U)) {
+                //outs() << "Is a constant struct!!!!!!!!!!!!!!!!!!!!!!!\n";
+                StructType *struct_type = dyn_cast<StructType>(pt_val->getType());
+                unsigned struct_size = getTypeSizeInBits(struct_type);
+                unsigned num_fields = pt_val->getType()->getStructNumElements();
+                for (unsigned i = 0; i < num_fields; i++) {
+                    if (struct_type->getElementType(i)->isPointerTy()) {
+                        if (struct_type->getElementType(i)->getPointerElementType()->isFunctionTy()) {
+                            Constant* elem_val = pt_val->getAggregateElement(i);
+                            if (Function* pt_func = dyn_cast<Function>(elem_val)) {
+                                if (pt_func == func) {
+                                    ret = i;
+                                    return ret;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return ret;
 }
 
 bool AddressTakenAnalysis::isAddressTaken(Value* V) {

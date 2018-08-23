@@ -57,6 +57,7 @@ static cl::bits<PointerAnalysis::PTATY> PASelected(cl::desc("Select pointer anal
             clEnumValN(PointerAnalysis::AndersenWave_WPA, "wander", "Wave propagation inclusion-based analysis"),
             clEnumValN(PointerAnalysis::AndersenWaveDiff_WPA, "ander", "Diff wave propagation inclusion-based analysis"),
             clEnumValN(PointerAnalysis::FSSPARSE_WPA, "fspta", "Sparse flow sensitive pointer analysis"),
+            clEnumValN(PointerAnalysis::FUNCPTR_ANA, "fptrana", "Untra-fast function pointer analysis"),
             clEnumValEnd));
 
 
@@ -124,6 +125,9 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         break;
     case PointerAnalysis::FSSPARSE_WPA:
         _pta = new FlowSensitive();
+        break;
+    case PointerAnalysis::FUNCPTR_ANA:
+        _pta= new Andersen();
         break;
     default:
         llvm::outs() << "This pointer analysis has not been implemented yet.\n";

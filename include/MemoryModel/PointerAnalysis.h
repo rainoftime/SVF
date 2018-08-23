@@ -68,6 +68,7 @@ public:
         FSCSPS_WPA,		///< Flow-, context-, path- sensitive WPA
         ADAPTFSCS_WPA,		///< Adaptive Flow-, context-, sensitive WPA
         ADAPTFSCSPS_WPA,	///< Adaptive Flow-, context-, path- sensitive WPA
+        FUNCPTR_ANA,         ///< Untra-fast, function pointer analysis
 
         // Demand driven analysis
         Insensitive_DDA, ///<  Flow-, context- insensitive DDA (POPL '08)
