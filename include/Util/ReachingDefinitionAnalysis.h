@@ -64,14 +64,13 @@ class ReachingDefinitionAnalysis
     : MyDataFlowAnalysis<ReachingInfo, true>(
         ReachingInfo::Bottom(), ReachingInfo::Bottom()) { }
 
- private:
   void AnalyzeFunction(Function* func) {
       this->RunWorklistAlgorithm(func);
       this->Print();
   }
   void AnalyzeModule(Module* mod) {
-      for (Function* func : *mod) {
-          AnalyzeFunction(func);
+      for (Function& func : *mod) {
+          AnalyzeFunction(&func);
       }
   }
   void FlowFunction(

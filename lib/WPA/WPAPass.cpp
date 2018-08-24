@@ -112,7 +112,7 @@ bool WPAPass::runOnModule(llvm::Module& module)
 void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
 {
     FunctionPointerAnalysis* fpa = nullptr;
-    ReachingDefinitionAnalysis* dfa = nullptr;  // for testing
+    //ReachingDefinitionAnalysis* dfa = nullptr;  // for testing
     /// Initialize pointer analysis.
     switch (kind) {
     case PointerAnalysis::Andersen_WPA:
@@ -135,8 +135,8 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         _pta= new Andersen(); // TODO: wo do not need to create this
         fpa = new FunctionPointerAnalysis(module);
         fpa->buildCG();
-        dfa = new ReachingDefinitionAnalysis();
-        dfa->AnalyzeModule(&module);
+        //dfa = new ReachingDefinitionAnalysis();
+        //dfa->AnalyzeModule(&module);
         break;
     default:
         llvm::outs() << "This pointer analysis has not been implemented yet.\n";
