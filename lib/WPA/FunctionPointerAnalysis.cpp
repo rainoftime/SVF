@@ -14,15 +14,18 @@ void FunctionPointerAnalysis::buildCG() {
         }
         for (BasicBlock& bb : f) {
             for (Instruction& inst : bb) {
+              if (isa<CallInst>(inst)) {
                 CallSite cs(&inst);
-                if (cs.isCall() || cs.isInvoke()) {
+                if (isa<InlineAsm>(cs.getCalledValue())) { 
+                    continue;
+                }
+                else if (cs.isCall() || cs.isInvoke()) {
                     Function *callee = cs.getCalledFunction();
                     if (!callee) {
-                        if (cppUtil::isVirtualCallSite(cs) || isa<InlineAsm>(cs.getCalledValue())) {
+                        if (cppUtil::isVirtualCallSite(cs)) {
                             continue;
                         } else {
                             std::unordered_set<Function*> result;
-
                             // First, use PPFunctionPointerAnalysis
                             PPFunctionPointerAnalysis* pfa = new PPFunctionPointerAnalysis();
                             pfa->run(&f, cs);
@@ -37,7 +40,6 @@ void FunctionPointerAnalysis::buildCG() {
                                 AddressTakenAnalysis* ata = new AddressTakenAnalysis(*M);
                                 ata->guessCalleesForIndCallSite(cs, result);
                             }
-
                             int i;
                             int cg_resolve_size = result.size();
                             for (i = 0; i < CG_BUCKET_NUMBER - 1; i++) {
@@ -51,8 +53,9 @@ void FunctionPointerAnalysis::buildCG() {
                             }
                         }
                     }
-               }
-           }
+              }
+          }
+        }
        }
     }
 
