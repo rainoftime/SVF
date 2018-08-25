@@ -36,8 +36,17 @@
 #include "MemoryModel/PointerAnalysis.h"
 #include "WPA/WPAPass.h"
 #include "WPA/Andersen.h"
-#include "WPA/FunctionPointerAnalysis.h"
 #include "WPA/FlowSensitive.h"
+
+// Function pointer analysis
+#include "WPA/FunctionPointerAnalysis.h"
+
+// Liveness-based points-to analysis
+#include "WPA/CallString.h"
+#include "WPA/LivenessPointsTo.h"
+#include "WPA/PointsToData.h"
+
+
 #include "Util/AddressTakenAnalysis.h"
 #include "Util/ReachingDefinitionAnalysis.h"
 #include <llvm/Support/CommandLine.h>
@@ -60,6 +69,7 @@ static cl::bits<PointerAnalysis::PTATY> PASelected(cl::desc("Select pointer anal
             clEnumValN(PointerAnalysis::AndersenWaveDiff_WPA, "ander", "Diff wave propagation inclusion-based analysis"),
             clEnumValN(PointerAnalysis::FSSPARSE_WPA, "fspta", "Sparse flow sensitive pointer analysis"),
             clEnumValN(PointerAnalysis::FUNCPTR_ANA, "fptrana", "Untra-fast function pointer analysis"),
+            clEnumValN(PointerAnalysis::LIVENESS_PTA, "livepta", "liveness-based pointer analysis"),
             clEnumValEnd));
 
 
@@ -112,6 +122,7 @@ bool WPAPass::runOnModule(llvm::Module& module)
 void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
 {
     FunctionPointerAnalysis* fpa = nullptr;
+    LivenessPointsTo *lpa = nullptr;
     //ReachingDefinitionAnalysis* dfa = nullptr;  // for testing
     /// Initialize pointer analysis.
     switch (kind) {
@@ -138,12 +149,49 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         //dfa = new ReachingDefinitionAnalysis();
         //dfa->AnalyzeModule(&module);
         break;
+    case PointerAnalysis::LIVENESS_PTA:
+        func_ptr_mode = true;
+        _pta= new Andersen(); // TODO: wo do not need to create this
+        lpa = new LivenessPointsTo();
+        break;
+
     default:
         llvm::outs() << "This pointer analysis has not been implemented yet.\n";
         break;
     }
 
     //if (func_ptr_mode) return;
+
+    if (lpa) {
+        lpa->runOnModule(module);
+        for (Function& F : module) {
+            ProcedurePointsTo data = *lpa->getPointsTo(F);
+            errs() << "Number of call strings for " << F.getName() << ": " << data.size() << "\n";
+            for (auto &P : data) {
+                errs() << "\n";
+                errs() << "Function: " << F.getName() << "\n";
+                errs() << "Call string: ";
+                std::get<0>(P).dump();
+                IntraproceduralPointsTo *pt = std::get<1>(P);
+
+                for (BasicBlock &BB : F) {
+                    errs() << BB.getName() << ":\n";
+                    for (Instruction &I : BB) {
+                        auto sv = pt->find(&I)->second;
+                        auto l = sv.first;
+                        auto p = sv.second;
+                        errs() << "Lin: \033[1;31m";
+                        l->dump();
+                        errs() << "\033[0m";
+                        I.dump();
+                        errs() << "Aout: \033[1;32m";
+                        p->dump();
+                        errs() << "\033[0m";
+                    }
+                }
+             }
+        }
+    }
 
     ptaVector.push_back(_pta);
     if (_pta && !func_ptr_mode)
