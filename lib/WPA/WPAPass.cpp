@@ -164,6 +164,7 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
 
     if (lpa) {
         lpa->runOnModule(module);
+        /*
         for (Function& F : module) {
             ProcedurePointsTo data = *lpa->getPointsTo(F);
             errs() << "Number of call strings for " << F.getName() << ": " << data.size() << "\n";
@@ -190,7 +191,7 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
                     }
                 }
              }
-        }
+        }*/
     }
 
     ptaVector.push_back(_pta);

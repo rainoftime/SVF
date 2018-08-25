@@ -647,8 +647,14 @@ void LivenessPointsTo::insertNewPairs(PointsToRelation &Aout, const Instruction 
     }
     else if (const PHINode *Phi = dyn_cast<PHINode>(I)) {
         PointsToNode *N = factory.getNode(Phi);
-        for (auto &V : Phi->incoming_values())
+        unsigned int num_values = Phi->getNumIncomingValues();
+        for (unsigned int i = 0; i < num_values; i++) {
+            Value* V = Phi->getIncomingValue(i); 
             insertNewPairsAssignment(Aout, N, factory.getNode(V), Unknown, Ain, Lout);
+        }
+        /*for (auto &V : Phi->incoming_values()) {
+            insertNewPairsAssignment(Aout, N, factory.getNode(V), Unknown, Ain, Lout);
+        }*/
     }
     else if (const GEPOperator *GEP = dyn_cast<GEPOperator>(I)) {
         PointsToNode *N = factory.getNode(GEP);
