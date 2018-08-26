@@ -745,7 +745,7 @@ void CHGraph::analyzeVTables(const Module &M) {
             //if (isa<ArrayType>(globalvalue->getType()) && globalvalue->getNumOperands() > 0) {
             if (globalvalue->getNumOperands() > 0) {
 
-                 string vtblClassName = getClassNameFromVtblObj(globalvalue);
+                 string vtblClassName = getClassNameFromVtblVal(globalvalue);
                  CHNode *node = getOrCreateNode(vtblClassName);
 
                  node->setVTable(globalvalue);
