@@ -603,18 +603,23 @@ void CHGraph::analyzeVTables(const Module &M) {
     for (Module::const_global_iterator I = M.global_begin(),
             E = M.global_end(); I != E; ++I) {
         const GlobalValue *globalvalue = dyn_cast<const GlobalValue>(I);
-        if (isValVtbl(globalvalue)) {
-            if (globalvalue->getNumOperands() > 0 && isa<ArrayType>(globalvalue->getOperand(0)->getType())
-                    ) {
+#if 0
+        if (isValVtbl(globalvalue) && globalvalue->getNumOperands() > 0) {
+            outs() << __LINE__ << "\n";
+            globalvalue->getOperand(0)->dump();
+            const ConstantStruct *vtblStruct = dyn_cast<ConstantStruct>(globalvalue->getOperand(0));
+            // TODO: assertion failure here
+            assert(vtblStruct && "Initializer of a vtable not a struct?");
 
-                string vtblClassName = getClassNameFromVtblVal(globalvalue);
-                CHNode *node = getOrCreateNode(vtblClassName);
+            string vtblClassName = getClassNameFromVtblObj(globalvalue);
+            CHNode *node = getOrCreateNode(vtblClassName);
 
-                node->setVTable(globalvalue);
+            node->setVTable(globalvalue);
 
+            for (int ei = 0; ei < vtblStruct->getNumOperands(); ++ei) {
                 const ConstantArray *vtbl =
-                    dyn_cast<ConstantArray>(globalvalue->getOperand(0));
-                assert (vtbl != NULL && "vtable operands not constant array");
+                    dyn_cast<ConstantArray>(vtblStruct->getOperand(ei));
+                assert(vtbl && "Element of initializer not an array?");
 
                 /*
                  * items in vtables can be classified into 3 categories:
@@ -623,7 +628,7 @@ void CHGraph::analyzeVTables(const Module &M) {
                  * 3. i8* bitcast xxx
                  */
                 bool pure_abstract = true;
-                u32_t i = 0;
+                unsigned i = 0;
                 while (i < vtbl->getNumOperands()) {
                     vector<const Function*> virtualFunctions;
                     bool is_virtual = false; // virtual inheritance
@@ -653,7 +658,7 @@ void CHGraph::analyzeVTables(const Module &M) {
                         const ConstantExpr *ce =
                             dyn_cast<ConstantExpr>(vtbl->getOperand(i));
                         assert(ce != NULL && "item in vtable not constantexp or null");
-                        u32_t opcode = ce->getOpcode();
+                        unsigned opcode = ce->getOpcode();
                         assert(opcode == Instruction::IntToPtr ||
                                opcode == Instruction::BitCast);
                         assert(ce->getNumOperands() == 1 &&
@@ -697,7 +702,7 @@ void CHGraph::analyzeVTables(const Module &M) {
                                         virtualFunctions.push_back(aliasFunc);
                                     } else if (const ConstantExpr *aliasconst =
                                                    dyn_cast<ConstantExpr>(aliasValue)) {
-                                        u32_t aliasopcode = aliasconst->getOpcode();
+                                        unsigned aliasopcode = aliasconst->getOpcode();
                                         assert(aliasopcode == Instruction::BitCast &&
                                                "aliased constantexpr in vtable not a bitcast");
                                         const Function *aliasbitcastfunc =
@@ -733,6 +738,148 @@ void CHGraph::analyzeVTables(const Module &M) {
                 }
             }
         }
+        outs() << __LINE__ << "\n";
+#else
+        if (isValVtbl(globalvalue)) {
+            // TODO: should we add isa<ArrayType>(globalvalue->getType())?
+            //if (isa<ArrayType>(globalvalue->getType()) && globalvalue->getNumOperands() > 0) {
+            if (globalvalue->getNumOperands() > 0) {
+
+                 string vtblClassName = getClassNameFromVtblObj(globalvalue);
+                 CHNode *node = getOrCreateNode(vtblClassName);
+
+                 node->setVTable(globalvalue);
+                 const ConstantArray *vtbl =
+                     dyn_cast<ConstantArray>(globalvalue->getOperand(0));
+
+                 assert(vtbl && "Initializer of a vtable not a struct?");
+
+                 for (int ei = 0; ei < vtbl->getNumOperands(); ++ei) {
+                     //const ConstantArray *vtbl =
+                      //   dyn_cast<ConstantArray>(vtblStruct->getOperand(ei));
+                     //assert(vtbl && "Element of initializer not an array?");
+
+                     /*
+                      * items in vtables can be classified into 3 categories:
+                      * 1. i8* null
+                      * 2. i8* inttoptr xxx
+                      * 3. i8* bitcast xxx
+                      */
+                     bool pure_abstract = true;
+                     unsigned i = 0;
+                     while (i < vtbl->getNumOperands()) {
+                         vector<const Function*> virtualFunctions;
+                         bool is_virtual = false; // virtual inheritance
+                         int null_ptr_num = 0;
+                         for (; i < vtbl->getNumOperands(); ++i) {
+                             if (isa<ConstantPointerNull>(vtbl->getOperand(i))) {
+                                 if (i > 0 && !isa<ConstantPointerNull>(vtbl->getOperand(i-1))) {
+                                     const ConstantExpr *ce =
+                                         dyn_cast<ConstantExpr>(vtbl->getOperand(i-1));
+                                     if (ce->getOpcode() == Instruction::BitCast) {
+                                         const Value *bitcastValue = ce->getOperand(0);
+                                         string bitcastValueName = bitcastValue->getName().str();
+                                         if (bitcastValueName.compare(0, ztiLabel.size(), ztiLabel) == 0) {
+                                             is_virtual = true;
+                                             null_ptr_num = 1;
+                                             while (i+null_ptr_num < vtbl->getNumOperands()) {
+                                                 if (isa<ConstantPointerNull>(vtbl->getOperand(i+null_ptr_num)))
+                                                     null_ptr_num++;
+                                                 else
+                                                     break;
+                                             }
+                                         }
+                                     }
+                                 }
+                                 continue;
+                             }
+                             const ConstantExpr *ce =
+                                 dyn_cast<ConstantExpr>(vtbl->getOperand(i));
+                             assert(ce != NULL && "item in vtable not constantexp or null");
+                             unsigned opcode = ce->getOpcode();
+                             assert(opcode == Instruction::IntToPtr ||
+                                    opcode == Instruction::BitCast);
+                             assert(ce->getNumOperands() == 1 &&
+                                    "inttptr or bitcast operand num not 1");
+                             if (opcode == Instruction::IntToPtr) {
+                                 node->setMultiInheritance();
+                                 ++i;
+                                 break;
+                             }
+                             if (opcode == Instruction::BitCast) {
+                                 const Value *bitcastValue = ce->getOperand(0);
+                                 string bitcastValueName = bitcastValue->getName().str();
+                                 /*
+                                  * value in bitcast:
+                                  * _ZTIXXX
+                                  * Function
+                                  * GlobalAlias (alias to other function)
+                                  */
+                                 assert(isa<Function>(bitcastValue) ||
+                                        isa<GlobalValue>(bitcastValue));
+                                 if (const Function *func = dyn_cast<Function>(bitcastValue)) {
+                                     node->addVirtualFunction(func);
+                                     virtualFunctions.push_back(func);
+                                     if (func->getName().str().compare(pureVirtualFunName) == 0) {
+                                         pure_abstract &= true;
+                                     } else {
+                                         pure_abstract &= false;
+                                     }
+                                     struct DemangledName dname = demangle(func->getName().str());
+                                     if (dname.className.size() > 0 &&
+                                             vtblClassName.compare(dname.className) != 0) {
+                                         addEdge(vtblClassName, dname.className, CHEdge::INHERITANCE);
+                                     }
+                                 } else {
+                                     if (const GlobalAlias *alias =
+                                                 dyn_cast<GlobalAlias>(bitcastValue)) {
+                                         const Constant *aliasValue = alias->getAliasee();
+                                         if (const Function *aliasFunc =
+                                                     dyn_cast<Function>(aliasValue)) {
+                                             node->addVirtualFunction(aliasFunc);
+                                             virtualFunctions.push_back(aliasFunc);
+                                         } else if (const ConstantExpr *aliasconst =
+                                                        dyn_cast<ConstantExpr>(aliasValue)) {
+                                             unsigned aliasopcode = aliasconst->getOpcode();
+                                             assert(aliasopcode == Instruction::BitCast &&
+                                                    "aliased constantexpr in vtable not a bitcast");
+                                             const Function *aliasbitcastfunc =
+                                                 dyn_cast<Function>(aliasconst->getOperand(0));
+                                             assert(aliasbitcastfunc &&
+                                                    "aliased bitcast in vtable not a function");
+                                             node->addVirtualFunction(aliasbitcastfunc);
+                                             virtualFunctions.push_back(aliasbitcastfunc);
+                                         } else {
+                                             assert(false && "alias not function or bitcast");
+                                         }
+
+                                         pure_abstract &= false;
+                                     } else if (bitcastValueName.compare(0, ztiLabel.size(),
+                                                                         ztiLabel) == 0) {
+                                     } else {
+                                         assert("what else can be in bitcast of a vtable?");
+                                     }
+                                 }
+                             }
+                         }
+                         if (is_virtual && virtualFunctions.size() > 0) {
+                             for (int i = 0; i < null_ptr_num; ++i) {
+                                 const Function *fun = virtualFunctions[i];
+                                 virtualFunctions.insert(virtualFunctions.begin(), fun);
+                             }
+                         }
+                         if (virtualFunctions.size() > 0)
+                             node->addVirtualFunctionVector(virtualFunctions);
+                     }
+                     if (pure_abstract == true) {
+                         node->setPureAbstract();
+                     }
+                 }
+
+            }
+        }
+
+#endif
     }
 }
 
