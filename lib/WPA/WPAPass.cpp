@@ -142,14 +142,11 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         break;
     case PointerAnalysis::FUNCPTR_ANA:
         func_ptr_mode = true;
-        _pta= new Andersen(); // TODO: we do not need to create this
-        // TODO: fpa is now a module pass; we should not initialize it in this way
+        //_pta = new Andersen(); // TODO: we do not need to create this
         _fpta = &getAnalysis<FunctionPointerAnalysis>();
-        // fpa->buildCG();
         break;
     case PointerAnalysis::LIVENESS_PTA:
         func_ptr_mode = true;
-        _pta= new Andersen(); // TODO: wo do not need to create this
         _livepta = new LivenessPointsTo();
         break;
 
@@ -161,7 +158,8 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
     //if (func_ptr_mode) return;
 
     if (_fpta) {
-        _fpta->runOnModule(module);
+        // _fpta->
+        return;
     }
 
     ptaVector.push_back(_pta);

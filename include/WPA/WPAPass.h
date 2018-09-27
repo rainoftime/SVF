@@ -36,7 +36,8 @@
 
 #ifndef WPA_H_
 #define WPA_H_
-
+#include "WPA/FunctionPointerAnalysis.h"
+#include "WPA/LivenessPointsTo.h"
 #include "MemoryModel/PointerAnalysis.h"
 #include <llvm/Analysis/AliasAnalysis.h>
 #include <llvm/Pass.h>
@@ -103,7 +104,6 @@ private:
 
     PTAVector ptaVector;	///< all pointer analysis to be executed.
     PointerAnalysis* _pta;	///<  pointer analysis to be executed.
-    FunctionPointerAnalysis *_fpta = nullptr;  // < function pointer analysis
     FunctionPointerAnalysis *_fpta = nullptr;  // < function pointer analysis
     LivenessPointsTo *_livepta = nullptr;
 };

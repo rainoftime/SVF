@@ -4,7 +4,9 @@
 using namespace llvm;
 
 
-static RegisterPass<FunctionPointerAnalysis> FPTA("fpa",
+char FunctionPointerAnalysis::ID = 0;
+
+static RegisterPass<FunctionPointerAnalysis> FunctionPointerAnalysis("fpa",
         "Whole Program Function Pointer Analysis Pass");
 
 void  FunctionPointerAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
@@ -93,11 +95,16 @@ void FunctionPointerAnalysis::impactAnalysis() {
 
 
 bool FunctionPointerAnalysis::runOnModule(Module& M) {
-    CG = getAnalysis<CallGraphWrapperPass>().getCallGraph();
+    CallGraphWrapperPass *CGPass = 
+      getAnalysisIfAvailable<CallGraphWrapperPass>();
+    
+    CG = CGPass ? &CGPass->getCallGraph() : nullptr;
     if (CG == nullptr) {
         errs() << "FunctionPointerAnalysis: Initialize CG failed\n";
+    } else {
+        outs() << "CG initialized!\n";
     }
-
+  
     outs() << "Running Function Pointer Analysis\n";
 
     return false;

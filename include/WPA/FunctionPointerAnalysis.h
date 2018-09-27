@@ -8,7 +8,7 @@
 using namespace llvm;
 
 
-class FunctionPointerAnalysis : ModulePass {
+class FunctionPointerAnalysis : public ModulePass {
 
 public:
     static char ID;
