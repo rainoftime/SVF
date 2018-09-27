@@ -31,6 +31,11 @@ public:
     ~AddressTakenAnalysis() {
         //address_taken_functions.clear();
     }
+
+    std::unordered_set<Function*>* getAddressTakenFunctions() {
+        return &address_taken_functions;
+    }
+
     uint64_t getTypeSizeInBits(Type *Ty);
     unsigned getGepConstantOffset(GetElementPtrInst* gep);
     int addressTakenFuncStoreIndexBase(Function *func);
