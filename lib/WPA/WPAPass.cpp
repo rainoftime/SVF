@@ -121,8 +121,7 @@ bool WPAPass::runOnModule(llvm::Module& module)
  */
 void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
 {
-    FunctionPointerAnalysis* fpa = nullptr;
-    LivenessPointsTo *lpa = nullptr;
+
     //ReachingDefinitionAnalysis* dfa = nullptr;  // for testing
     /// Initialize pointer analysis.
     switch (kind) {
@@ -143,16 +142,15 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         break;
     case PointerAnalysis::FUNCPTR_ANA:
         func_ptr_mode = true;
-        _pta= new Andersen(); // TODO: wo do not need to create this
-        fpa = new FunctionPointerAnalysis(module);
-        fpa->buildCG();
-        //dfa = new ReachingDefinitionAnalysis();
-        //dfa->AnalyzeModule(&module);
+        _pta= new Andersen(); // TODO: we do not need to create this
+        // TODO: fpa is now a module pass; we should not initialize it in this way
+        _fpta = &getAnalysis<FunctionPointerAnalysis>();
+        // fpa->buildCG();
         break;
     case PointerAnalysis::LIVENESS_PTA:
         func_ptr_mode = true;
         _pta= new Andersen(); // TODO: wo do not need to create this
-        lpa = new LivenessPointsTo();
+        _livepta = new LivenessPointsTo();
         break;
 
     default:
@@ -162,36 +160,8 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
 
     //if (func_ptr_mode) return;
 
-    if (lpa) {
-        lpa->runOnModule(module);
-        /*
-        for (Function& F : module) {
-            ProcedurePointsTo data = *lpa->getPointsTo(F);
-            errs() << "Number of call strings for " << F.getName() << ": " << data.size() << "\n";
-            for (auto &P : data) {
-                errs() << "\n";
-                errs() << "Function: " << F.getName() << "\n";
-                errs() << "Call string: ";
-                std::get<0>(P).dump();
-                IntraproceduralPointsTo *pt = std::get<1>(P);
-
-                for (BasicBlock &BB : F) {
-                    errs() << BB.getName() << ":\n";
-                    for (Instruction &I : BB) {
-                        auto sv = pt->find(&I)->second;
-                        auto l = sv.first;
-                        auto p = sv.second;
-                        errs() << "Lin: \033[1;31m";
-                        l->dump();
-                        errs() << "\033[0m";
-                        I.dump();
-                        errs() << "Aout: \033[1;32m";
-                        p->dump();
-                        errs() << "\033[0m";
-                    }
-                }
-             }
-        }*/
+    if (_fpta) {
+        _fpta->runOnModule(module);
     }
 
     ptaVector.push_back(_pta);

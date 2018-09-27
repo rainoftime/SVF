@@ -3,7 +3,16 @@
 #include "Util/PPFunctionPointerAnalysis.h"
 using namespace llvm;
 
-void FunctionPointerAnalysis::buildCG() {
+
+static RegisterPass<FunctionPointerAnalysis> FPTA("fpa",
+        "Whole Program Function Pointer Analysis Pass");
+
+void  FunctionPointerAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
+    AU.setPreservesAll();
+    AU.addRequired<CallGraphWrapperPass>();
+}
+
+void FunctionPointerAnalysis::buildCG(Module* M) {
     int CG_BUCKET_NUMBER = 11;
     int cg_bucket[11] = { 0 };
     int cg_bucket_steps[11] = { 0, 1, 2, 3, 4, 5, 6, 7, 10, 30, 100 };
@@ -74,4 +83,22 @@ void FunctionPointerAnalysis::buildCG() {
     outs() << "\n";
     llvm::outs() << "-------------FunctionPointerAnalysis CG End------------------\n";
 
+}
+
+
+void FunctionPointerAnalysis::impactAnalysis() {
+
+
+}
+
+
+bool FunctionPointerAnalysis::runOnModule(Module& M) {
+    CG = getAnalysis<CallGraphWrapperPass>().getCallGraph();
+    if (CG == nullptr) {
+        errs() << "FunctionPointerAnalysis: Initialize CG failed\n";
+    }
+
+    outs() << "Running Function Pointer Analysis\n";
+
+    return false;
 }

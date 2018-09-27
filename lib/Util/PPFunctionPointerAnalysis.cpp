@@ -54,7 +54,7 @@ void PPFunctionPointerAnalysis::processFuncPtr(Value* funcptr) {
     else if (CastInst* cast_inst = dyn_cast<CastInst>(funcptr)) {
         Value* cast_val = cast_inst->getOperand(0);
         if (Function *func = dyn_cast<Function>(cast_val)) {
-            outs() << __LINE__ << ", PPFptrAnalysis find a function: " <<
+            if (verbose_lvl > 1) outs() << __LINE__ << ", PPFptrAnalysis find a function: " <<
                    func->getName() << "\n";
             callsite_targets.insert(func);
         } else if (Argument* argument = dyn_cast<Argument>(cast_val)) {
@@ -75,7 +75,7 @@ void PPFunctionPointerAnalysis::processFuncPtrLoadInst(LoadInst* load_inst) {
             if (StoreInst* st = dyn_cast<StoreInst>(U)) {
                 Value* value = st->getOperand(0);
                 if (Function* func = dyn_cast<Function>(value)) {
-                    outs() << __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
+                    if (verbose_lvl > 1) outs() << __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
                     callsite_targets.insert(func);
                 } else if (Argument* argument = dyn_cast<Argument>(value)) {
                     processFuncPtrArgFuncptr(argument);
@@ -86,7 +86,7 @@ void PPFunctionPointerAnalysis::processFuncPtrLoadInst(LoadInst* load_inst) {
             else if (LoadInst* st = dyn_cast<LoadInst>(U)) {
                 Value* v_st = st->getOperand(0);
                 if (Function* func = dyn_cast<Function>(v_st)) {
-                    outs() << __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
+                    if (verbose_lvl > 1) outs() << __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
                     callsite_targets.insert(func);
                 }
                 /*else if (ConstantExpr* val_exp = dyn_cast<ConstantExpr>(v_st)) {
@@ -121,7 +121,7 @@ void PPFunctionPointerAnalysis::processFuncPtrGEPInst(GetElementPtrInst* gep_ins
                     if (StoreInst* store_inst = dyn_cast<StoreInst>(UL)) {
                         Value* vl = store_inst->getOperand(0);
                         if (Function* func = dyn_cast<Function>(vl)) {
-                            outs() << __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
+                            if (verbose_lvl > 1) outs() << __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
                             callsite_targets.insert(func);
                         } /*else if (ConstantExpr* val_exp = dyn_cast<ConstantExpr>(vl)) {
                             if (CastInst* cast_inst = dyn_cast<CastInst>(val_exp->getAsInstruction())) {
@@ -230,7 +230,7 @@ void PPFunctionPointerAnalysis::processFuncPtrArgFuncptr(Argument* argument) {
 
 void PPFunctionPointerAnalysis::processFuncPtrPhiNode(PHINode* phi_node) {
     // In LLVM 3.6, we cannot use phi_node->incoming_values()
-    outs() << "PPFptrAna: phi node\n";
+    if (verbose_lvl > 1) outs() << "PPFptrAna: phi node\n";
     unsigned int num_values = phi_node->getNumIncomingValues();
     if (num_values < 1) {
         return;
@@ -248,19 +248,19 @@ void PPFunctionPointerAnalysis::processFuncPtrPhiNode(PHINode* phi_node) {
                 if (CallInst* sext_ori_call = dyn_cast<CallInst>(sext_ori)) {
                     Function* func = sext_ori_call->getCalledFunction();
                     if (func) {
-                        outs() <<  __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
+                        if (verbose_lvl > 1) outs() <<  __LINE__ << ", PPFptrAnalysis find a function " << func->getName() << "\n";
                         callsite_targets.insert(func);
                     }
                 }
             }
         } else if (Function* func = dyn_cast<Function>(val_i)) {
-            outs() << __LINE__ << ", PPFptrAnalysis find a function: " << func->getName() << "\n";
+            if (verbose_lvl > 1) outs() << __LINE__ << ", PPFptrAnalysis find a function: " << func->getName() << "\n";
             callsite_targets.insert(func);
         } else if (Constant* cons_i = dyn_cast<Constant>(val_i)) {
             //outs() << __LINE__ << "\n";
             //cons_i->dump();
         } else if (PHINode* phi_i = dyn_cast<PHINode>(val_i)) {
-            outs() << __LINE__ << "\n";
+            if (verbose_lvl > 1) outs() << __LINE__ << "\n";
             processFuncPtrPhiNode(phi_i);
         } else if (Argument* argu_i = dyn_cast<Argument>(val_i)) {
             processFuncPtrArgFuncptr(argu_i);
@@ -268,7 +268,7 @@ void PPFunctionPointerAnalysis::processFuncPtrPhiNode(PHINode* phi_node) {
             if (verbose_lvl > 1) outs() << __LINE__ << "\n";
             //load_i ->getOperand(0)->dump();
             if (Function* func = dyn_cast<Function>(load_i->getOperand(0))) {
-                outs() <<  __LINE__ << ", PPFptrAnalysis find a function\n";
+                if (verbose_lvl > 1) outs() <<  __LINE__ << ", PPFptrAnalysis find a function\n";
                 callsite_targets.insert(func);
             } else  {
                 // TODO: currently, donot track too-long inforamtion
@@ -283,7 +283,7 @@ void PPFunctionPointerAnalysis::processFuncPtrPhiNode(PHINode* phi_node) {
 
 
 void PPFunctionPointerAnalysis::processFuncPtrCallInst(CallInst* call_inst) {
-    outs() << "PPFptrAna: call inst\n";
+    if (verbose_lvl > 1) outs() << "PPFptrAna: call inst\n";
     Function* func = call_inst->getCalledFunction();
     // funcptr
     if (func != nullptr) {

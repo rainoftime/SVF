@@ -73,6 +73,7 @@ public:
         // declare your dependencies here.
         /// do not intend to change the IR in this pass,
         au.setPreservesAll();
+        au.addRequired<FunctionPointerAnalysis>();
     }
 
     /// Get adjusted analysis for alias analysis
@@ -102,6 +103,9 @@ private:
 
     PTAVector ptaVector;	///< all pointer analysis to be executed.
     PointerAnalysis* _pta;	///<  pointer analysis to be executed.
+    FunctionPointerAnalysis *_fpta = nullptr;  // < function pointer analysis
+    FunctionPointerAnalysis *_fpta = nullptr;  // < function pointer analysis
+    LivenessPointsTo *_livepta = nullptr;
 };
 
 
