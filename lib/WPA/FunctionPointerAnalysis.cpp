@@ -231,7 +231,7 @@ void FunctionPointerAnalysis::buildCG(Module& M) {
                                 }
                             } else {
                                 // Then, use AddressTakenFunctionAnalysis
-                                AddressTakenAnalysis* ata = new AddressTakenAnalysis(*M);
+                                AddressTakenAnalysis* ata = new AddressTakenAnalysis(M);
                                 ata->guessCalleesForIndCallSite(cs, result);
                             }
                             int i;
