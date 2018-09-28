@@ -13,10 +13,7 @@ public:
     static char ID;
 
     FunctionPointerAnalysis(): ModulePass(ID) {
-        num_implemented_funcs = 0;
-        num_address_taken_funcs = 0;
-        num_funcs_with_indirect_calls = 0;
-        num_funcs_with_fptr_para = 0;
+
     }
 
     virtual ~FunctionPointerAnalysis() {
@@ -42,10 +39,10 @@ public:
 private:
 
     CallGraph* CG = nullptr;
-    unsigned num_implemented_funcs;
-    unsigned num_address_taken_funcs;
-    unsigned num_funcs_with_indirect_calls;
-    unsigned num_funcs_with_fptr_para;
+    unsigned num_implemented_funcs = 0;
+    unsigned num_address_taken_funcs = 0;
+    unsigned num_funcs_with_indirect_calls = 0;
+    unsigned num_funcs_with_fptr_para = 0;
 
     std::map<Value*, std::set<Value*>> global_values_cache;
     std::map<const llvm::StructType*, const llvm::StructType *> struct_types_cache;

@@ -16,9 +16,8 @@ void  FunctionPointerAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
 
 
 bool FunctionPointerAnalysis::runOnModule(Module& M) {
-    CallGraphWrapperPass *CGPass =
-      getAnalysisIfAvailable<CallGraphWrapperPass>();
-
+    outs() << "Running Function Pointer Analysis\n";
+    CallGraphWrapperPass *CGPass = getAnalysisIfAvailable<CallGraphWrapperPass>();
     CG = CGPass ? &CGPass->getCallGraph() : nullptr;
     if (CG == nullptr) {
         errs() << "FunctionPointerAnalysis: Initialize CG failed\n";
@@ -26,14 +25,11 @@ bool FunctionPointerAnalysis::runOnModule(Module& M) {
         outs() << "CG initialized!\n";
     }
 
-    outs() << "Running Function Pointer Analysis\n";
+    computeAddressTakenFuncs(M);  // get all address-taken functions
 
-    computeAddressTakenFuncs(M);
+    computeFuncWithIndCall(M);    // get all functions containing indirect call sites
 
-    computeFuncWithIndCall(M);
-
-    computeGlobalStorage(M);
-
+    computeGlobalStorage(M);      // cache global variables
 
 
     return false;
@@ -45,6 +41,7 @@ void FunctionPointerAnalysis::computeAddressTakenFuncs(Module& M) {
     for (Function* func : *(ata->getAddressTakenFunctions())) {
         address_taken_functions.insert(func);
     }
+    num_address_taken_funcs = address_taken_functions.size();
 }
 
 void FunctionPointerAnalysis::computeFuncWithIndCall(Module& M) {
@@ -52,6 +49,7 @@ void FunctionPointerAnalysis::computeFuncWithIndCall(Module& M) {
         if (func.isDeclaration() || func.isIntrinsic()) {
             continue;
         }
+        num_implemented_funcs++;
         bool contain_indcall = false;
         for (BasicBlock& bb : func) {
             for (Instruction& inst : bb) {
@@ -71,8 +69,12 @@ void FunctionPointerAnalysis::computeFuncWithIndCall(Module& M) {
            }
        }
 ADDTOSET:
-       if (contain_indcall) funcs_with_indirect_calls.insert(&func);
+       if (contain_indcall) {
+           funcs_with_indirect_calls.insert(&func);
+           num_funcs_with_indirect_calls++;
+       }
     }
+
 
 }
 
