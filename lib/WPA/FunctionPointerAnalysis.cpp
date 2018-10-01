@@ -26,14 +26,30 @@ bool FunctionPointerAnalysis::runOnModule(Module& M) {
     }
 
     computeAddressTakenFuncs(M);  // get all address-taken functions
-
     computeFuncWithIndCall(M);    // get all functions containing indirect call sites
-
     computeGlobalStorage(M);      // cache global variables
-
-
+    computeFuncWithFptrParaOrRet(M); // get all functions containing fptr parameter or ret
+    impactAnalysis(M);
+    printStat();
     return false;
 }
+
+
+
+void FunctionPointerAnalysis::printStat() {
+    llvm::outs() << "--------------FunctionPointerAnalysis Stat------------------\n";
+    outs() << "\n";
+    int i;
+    outs() << "Total implemented funcs: \t" << num_implemented_funcs << "\n";
+    outs() << "Total address-taken funs: \t" << num_address_taken_funcs << "\n";
+    outs() << "Total funcs with indirect calls: \t" << num_funcs_with_indirect_calls << "\n";
+    outs() << "Total funcs with fptr parameters or returns: \t" << num_funcs_with_fptr_para_or_ret << "\n";
+    outs() << "\n";
+    outs() << "Total funcs impacted by fptr: \t" << num_funcs_impact_fptr << "\n";
+    outs() << "\n";
+    llvm::outs() << "-------------FunctionPointerAnalysis Stat------------------\n";
+}
+
 
 void FunctionPointerAnalysis::computeAddressTakenFuncs(Module& M) {
     AddressTakenAnalysis* ata = new AddressTakenAnalysis(M);
@@ -43,6 +59,43 @@ void FunctionPointerAnalysis::computeAddressTakenFuncs(Module& M) {
     }
     num_address_taken_funcs = address_taken_functions.size();
 }
+
+void FunctionPointerAnalysis::computeFuncWithFptrParaOrRet(Module& M) {
+    for (Function& func : M) {
+        if (func.isDeclaration() || func.isIntrinsic()) {
+            continue;
+        }
+
+        FunctionType* func_ty = func.getFunctionType();
+
+        // first, check return type
+        Type *return_type = func_ty->getReturnType();
+        if (return_type->isPointerTy()) {
+          if (return_type->getPointerElementType()->isFunctionTy()) {
+              funcs_with_fptr_para_or_ret.insert(&func);
+          }
+        }
+
+        // then, check parameter type
+        // unsigned n_parameters = func_ty->getFunctionNumParams();
+        auto& arg_list = func.getArgumentList();
+        unsigned idx = 0;
+        for (Argument& formal_arg : arg_list) {
+            Type* formal_type = formal_arg.getType();
+            if (formal_type->isPointerTy()) {
+              if (formal_type->getPointerElementType()->isFunctionTy()) {
+                  funcs_with_fptr_para_or_ret.insert(&func);
+                  break;
+              }
+            }
+            idx++;
+        }
+    }
+
+    num_funcs_with_fptr_para_or_ret = funcs_with_fptr_para_or_ret.size();
+}
+
+
 
 void FunctionPointerAnalysis::computeFuncWithIndCall(Module& M) {
     for (Function& func : M) {
@@ -71,11 +124,10 @@ void FunctionPointerAnalysis::computeFuncWithIndCall(Module& M) {
 ADDTOSET:
        if (contain_indcall) {
            funcs_with_indirect_calls.insert(&func);
-           num_funcs_with_indirect_calls++;
        }
     }
 
-
+    num_funcs_with_indirect_calls = funcs_with_indirect_calls.size();
 }
 
 void FunctionPointerAnalysis::computeGlobalStorage(Module& M) {
@@ -195,6 +247,12 @@ void FunctionPointerAnalysis::impactAnalysis(Module& M) {
     for (Function* func : funcs_with_indirect_calls) {
         impacted_by_fptr_functions.insert(func);
     }
+
+    for (Function* func : funcs_with_fptr_para_or_ret) {
+        impacted_by_fptr_functions.insert(func);
+    }
+
+    num_funcs_impact_fptr = impacted_by_fptr_functions.size();
 
 }
 
