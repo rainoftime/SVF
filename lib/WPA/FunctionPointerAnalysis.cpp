@@ -40,7 +40,7 @@ void FunctionPointerAnalysis::printStat() {
     int i;
     outs() << "Total implemented funcs: \t" << num_implemented_funcs << "\n";
     outs() << "Total address-taken funs: \t" << num_address_taken_funcs << "\n";
-    outs() << "Total funcs where address-taken happen: \n" << address_taken_happen_at.size() << "\n";
+    outs() << "Total funcs where address-taken happen: " << address_taken_happen_at.size() << "\n";
     outs() << "Total funcs with indirect calls: \t" << num_funcs_with_indirect_calls << "\n";
     outs() << "Total funcs with fptr parameters or returns: \t" << num_funcs_with_fptr_para_or_ret << "\n";
     outs() << "\n";
