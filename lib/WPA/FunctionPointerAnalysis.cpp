@@ -34,30 +34,49 @@ bool FunctionPointerAnalysis::runOnModule(Module& M) {
     return false;
 }
 
-
-
 void FunctionPointerAnalysis::printStat() {
-    llvm::outs() << "--------------FunctionPointerAnalysis Stat------------------\n";
+    outs() << "--------------FunctionPointerAnalysis Statistics------------------\n";
     outs() << "\n";
     int i;
     outs() << "Total implemented funcs: \t" << num_implemented_funcs << "\n";
     outs() << "Total address-taken funs: \t" << num_address_taken_funcs << "\n";
+    outs() << "Total funcs where address-taken happen: \n" << address_taken_happen_at.size() << "\n";
     outs() << "Total funcs with indirect calls: \t" << num_funcs_with_indirect_calls << "\n";
     outs() << "Total funcs with fptr parameters or returns: \t" << num_funcs_with_fptr_para_or_ret << "\n";
     outs() << "\n";
     outs() << "Total funcs impacted by fptr: \t" << num_funcs_impact_fptr << "\n";
     outs() << "\n";
-    llvm::outs() << "-------------FunctionPointerAnalysis Stat------------------\n";
+    outs() << "-------------FunctionPointerAnalysis Statistics------------------\n";
 }
 
 
 void FunctionPointerAnalysis::computeAddressTakenFuncs(Module& M) {
+
+    // get all address-taken functions
     AddressTakenAnalysis* ata = new AddressTakenAnalysis(M);
     ata->getAddressTakenFunctions();
     for (Function* func : *(ata->getAddressTakenFunctions())) {
         address_taken_functions.insert(func);
     }
     num_address_taken_funcs = address_taken_functions.size();
+
+    // look for how address-taken happens
+    for (Function* func: address_taken_functions) {
+        for (Value::const_use_iterator I = func->use_begin(), E = func->use_end(); I != E; ++I) {
+            User* U = I->getUser ();
+            if (isa<StoreInst>(U)) {
+                if (StoreInst* store_inst = dyn_cast<StoreInst>(U)) {
+                    Function* addr_taken_happen = store_inst->getParent()->getParent();
+                    if (addr_taken_happen) {
+                        address_taken_happen_at.insert(addr_taken_happen);
+                    }
+                }
+                // TODO: what about other instructions? ..
+            } //else if (isa<CastInst>(U)) {
+
+            //}
+        }
+    }
 }
 
 void FunctionPointerAnalysis::computeFuncWithFptrParaOrRet(Module& M) {
@@ -243,6 +262,10 @@ void FunctionPointerAnalysis::impactAnalysis(Module& M) {
         impacted_by_fptr_functions.insert(func);
     }
 
+    for (Function* func : address_taken_happen_at) {
+        impacted_by_fptr_functions.insert(func);
+    }
+
     // Second, collect functions with indirect call sites
     for (Function* func : funcs_with_indirect_calls) {
         impacted_by_fptr_functions.insert(func);
@@ -251,6 +274,7 @@ void FunctionPointerAnalysis::impactAnalysis(Module& M) {
     for (Function* func : funcs_with_fptr_para_or_ret) {
         impacted_by_fptr_functions.insert(func);
     }
+
 
     num_funcs_impact_fptr = impacted_by_fptr_functions.size();
 
@@ -313,7 +337,7 @@ void FunctionPointerAnalysis::buildCG(Module& M) {
        }
     }
 
-    llvm::outs() << "--------------FunctionPointerAnalysis CG Begin------------------\n";
+    outs() << "--------------FunctionPointerAnalysis CG Begin------------------\n";
     outs() << "\n";
     int i;
     for (i = 0; i < CG_BUCKET_NUMBER - 1; i++) {
@@ -326,6 +350,5 @@ void FunctionPointerAnalysis::buildCG(Module& M) {
     outs() << "\t>" << cg_bucket_steps[i] << ": \t\t";
     outs() << cg_bucket[i] << "\n";
     outs() << "\n";
-    llvm::outs() << "-------------FunctionPointerAnalysis CG End------------------\n";
-
+    outs() << "-------------FunctionPointerAnalysis CG End------------------\n";
 }

@@ -47,6 +47,7 @@ private:
     // functions having their addresses taken
     unsigned num_address_taken_funcs = 0;
     std::set<Function*> address_taken_functions;
+    std::set<Function*> address_taken_happen_at;
 
     // functions containing indirect call sites
     unsigned num_funcs_with_indirect_calls = 0;
