@@ -23,6 +23,10 @@ public:
         M = &_M;
         default_ptrsz = M->getDataLayout()->getPointerSizeInBits();
         for (Module::iterator FI = M->begin(), FE = M->end(); FI != FE; ++FI) {
+            if (FI->isDeclaration() || FI->isIntrinsic()) {
+                continue;
+            }
+
             if (isAddressTaken(FI)) {
                 address_taken_functions.insert(FI);
             }
