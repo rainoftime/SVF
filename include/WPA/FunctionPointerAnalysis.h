@@ -4,6 +4,8 @@
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "Util/AnalysisUtil.h"
+#include "MemoryModel/PointerAnalysis.h"
+
 
 using namespace llvm;
 

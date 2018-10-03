@@ -1,6 +1,11 @@
 #include "WPA/FunctionPointerAnalysis.h"
 #include "Util/AddressTakenAnalysis.h"
 #include "Util/PPFunctionPointerAnalysis.h"
+#include <llvm/Support/CommandLine.h>
+#include "WPA/Andersen.h"
+#include "WPA/FlowSensitive.h"
+
+
 using namespace llvm;
 
 
@@ -52,7 +57,6 @@ bool FunctionPointerAnalysis::runOnModule(Module& M) {
 void FunctionPointerAnalysis::printStat() {
     outs() << "--------------FunctionPointerAnalysis Statistics------------------\n";
     outs() << "\n";
-    int i;
     outs() << "Total implemented funcs: \t" << num_implemented_funcs << "\n";
     outs() << "Total address-taken funcs: \t" << num_address_taken_funcs << "\n";
     outs() << "Total funcs where address-taken happen: " << address_taken_happen_at.size() << "\n";
@@ -68,44 +72,46 @@ void FunctionPointerAnalysis::printStat() {
 void FunctionPointerAnalysis::collectFptrAccess(Module& M) {
     for (Function& func : M) {
         if (func.isDeclaration() || func.isIntrinsic()) {
-            goto CONTINUE;
+            continue;
         }
         for (BasicBlock& bb : func) {
             for (Instruction& inst : bb) {
-                if (StoreInst* store = dyn_cast<StoreInst>(inst)) {
+                if (StoreInst* store = dyn_cast<StoreInst>(&inst)) {
                     Value* store_ptr = store->getPointerOperand();
                     Value* store_value = store->getValueOperand();
                     if (store_value->getType()->isPointerTy()) {
                         if (store_value->getType()->getPointerElementType()->isFunctionTy()) {
                             outs() << "A fptr is stored to memory\n";
+                            goto CONT;
                         }
                     }
                     if (store_ptr->getType()->isPointerTy()) {
                         if (store_ptr->getType()->getPointerElementType()->isFunctionTy()) {
                             outs() << "A fptr is used as target of store\n";
-                        }s
+                            goto CONT;
+                        }
                     }
-                } else if (LoadInst* load = dyn_cast<LoadInst>(inst)) {
+                } else if (LoadInst* load = dyn_cast<LoadInst>(&inst)) {
                     // Value* load_ptr = load->getPointerOperand();
                     if (load->getType()->isPointerTy()) {
                         if (load->getType()->getPointerElementType()->isFunctionTy()) {
                             outs() << "A fptr is loaded from memory\n";
+                            goto CONT;
                         }
                     }
-                } else if (CastInst* cast = dyn_cast<CastInst>(inst)) {
+                } else if (CastInst* cast = dyn_cast<CastInst>(&inst)) {
                     if (cast->getType()->isPointerTy()) {
                         if (cast->getType()->getPointerElementType()->isFunctionTy()) {
                             outs() << "A fptr is loaded from memory\n";
+                            goto CONT;
                         }
                     }
                 }
            }
        }
-    }
-CONTINUE:
+CONT:
     continue;
-
-
+    }
 }
 
 
