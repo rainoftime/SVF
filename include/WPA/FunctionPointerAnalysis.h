@@ -29,6 +29,9 @@ public:
     void collectTypes(Module& M);
     void printStat();
 
+    void collectFptrAccess(Module& M);
+
+
 public:
     void buildCG(Module& M);
 
@@ -40,7 +43,12 @@ public:
 
 private:
 
-    CallGraph* CG = nullptr;
+    CallGraph* llvm_cg = nullptr;
+
+    // Maybe I need the result of Andersen's analsyis
+    PointerAnalysis* _pta = nullptr;  ///<  pointer analysis to be executed.
+    PTACallGraph* svf_cg = nullptr;
+
     // implemented functions
     unsigned num_implemented_funcs = 0;
 

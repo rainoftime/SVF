@@ -9,6 +9,10 @@ char FunctionPointerAnalysis::ID = 0;
 static RegisterPass<FunctionPointerAnalysis> FunctionPointerAnalysis("fpa",
         "Whole Program Function Pointer Analysis Pass");
 
+
+cl::opt<bool> enableAnderForFptrAna("enable-ander-for-fptrana", cl::init(false),
+                        cl::desc("Generate Andersen's Analysis for the function pointer analsyis"));
+
 void  FunctionPointerAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
     AU.setPreservesAll();
     AU.addRequired<CallGraphWrapperPass>();
@@ -17,12 +21,21 @@ void  FunctionPointerAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
 
 bool FunctionPointerAnalysis::runOnModule(Module& M) {
     outs() << "Running Function Pointer Analysis\n";
+
+    // init LLVM CG
     CallGraphWrapperPass *CGPass = getAnalysisIfAvailable<CallGraphWrapperPass>();
-    CG = CGPass ? &CGPass->getCallGraph() : nullptr;
-    if (CG == nullptr) {
+    llvm_cg = CGPass ? &CGPass->getCallGraph() : nullptr;
+    if (llvm_cg == nullptr) {
         errs() << "FunctionPointerAnalysis: Initialize CG failed\n";
     } else {
         outs() << "CG initialized!\n";
+    }
+
+    if (enableAnderForFptrAna) {
+        // init Andersen's PTA
+        _pta = new Andersen();
+        _pta->analyze(M);
+        svf_cg = _pta->getPTACallGraph();
     }
 
     computeAddressTakenFuncs(M);  // get all address-taken functions
@@ -30,6 +43,8 @@ bool FunctionPointerAnalysis::runOnModule(Module& M) {
     computeGlobalStorage(M);      // cache global variables
     computeFuncWithFptrParaOrRet(M); // get all functions containing fptr parameter or ret
     impactAnalysis(M);
+
+    collectFptrAccess(M);
     printStat();
     return false;
 }
@@ -39,7 +54,7 @@ void FunctionPointerAnalysis::printStat() {
     outs() << "\n";
     int i;
     outs() << "Total implemented funcs: \t" << num_implemented_funcs << "\n";
-    outs() << "Total address-taken funs: \t" << num_address_taken_funcs << "\n";
+    outs() << "Total address-taken funcs: \t" << num_address_taken_funcs << "\n";
     outs() << "Total funcs where address-taken happen: " << address_taken_happen_at.size() << "\n";
     outs() << "Total funcs with indirect calls: \t" << num_funcs_with_indirect_calls << "\n";
     outs() << "Total funcs with fptr parameters or returns: \t" << num_funcs_with_fptr_para_or_ret << "\n";
@@ -47,6 +62,50 @@ void FunctionPointerAnalysis::printStat() {
     outs() << "Total funcs impacted by fptr: \t" << num_funcs_impact_fptr << "\n";
     outs() << "\n";
     outs() << "-------------FunctionPointerAnalysis Statistics------------------\n";
+}
+
+
+void FunctionPointerAnalysis::collectFptrAccess(Module& M) {
+    for (Function& func : M) {
+        if (func.isDeclaration() || func.isIntrinsic()) {
+            goto CONTINUE;
+        }
+        for (BasicBlock& bb : func) {
+            for (Instruction& inst : bb) {
+                if (StoreInst* store = dyn_cast<StoreInst>(inst)) {
+                    Value* store_ptr = store->getPointerOperand();
+                    Value* store_value = store->getValueOperand();
+                    if (store_value->getType()->isPointerTy()) {
+                        if (store_value->getType()->getPointerElementType()->isFunctionTy()) {
+                            outs() << "A fptr is stored to memory\n";
+                        }
+                    }
+                    if (store_ptr->getType()->isPointerTy()) {
+                        if (store_ptr->getType()->getPointerElementType()->isFunctionTy()) {
+                            outs() << "A fptr is used as target of store\n";
+                        }s
+                    }
+                } else if (LoadInst* load = dyn_cast<LoadInst>(inst)) {
+                    // Value* load_ptr = load->getPointerOperand();
+                    if (load->getType()->isPointerTy()) {
+                        if (load->getType()->getPointerElementType()->isFunctionTy()) {
+                            outs() << "A fptr is loaded from memory\n";
+                        }
+                    }
+                } else if (CastInst* cast = dyn_cast<CastInst>(inst)) {
+                    if (cast->getType()->isPointerTy()) {
+                        if (cast->getType()->getPointerElementType()->isFunctionTy()) {
+                            outs() << "A fptr is loaded from memory\n";
+                        }
+                    }
+                }
+           }
+       }
+    }
+CONTINUE:
+    continue;
+
+
 }
 
 
