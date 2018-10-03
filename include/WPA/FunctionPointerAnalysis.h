@@ -69,6 +69,7 @@ private:
 
     unsigned num_funcs_impact_fptr = 0;
     std::set<Function*> impacted_by_fptr_functions;
+    unsigned num_funcs_using_fptr = 0;
 
     // caches
     std::map<Value*, std::set<Value*>> global_values_cache;

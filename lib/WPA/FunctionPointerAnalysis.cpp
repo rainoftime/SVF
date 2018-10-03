@@ -62,6 +62,7 @@ void FunctionPointerAnalysis::printStat() {
     outs() << "Total funcs where address-taken happen: " << address_taken_happen_at.size() << "\n";
     outs() << "Total funcs with indirect calls: \t" << num_funcs_with_indirect_calls << "\n";
     outs() << "Total funcs with fptr parameters or returns: \t" << num_funcs_with_fptr_para_or_ret << "\n";
+    outs() << "Total funcs using fptr: \t" << num_funcs_using_fptr << "\n";
     outs() << "\n";
     outs() << "Total funcs impacted by fptr: \t" << num_funcs_impact_fptr << "\n";
     outs() << "\n";
@@ -81,13 +82,15 @@ void FunctionPointerAnalysis::collectFptrAccess(Module& M) {
                     Value* store_value = store->getValueOperand();
                     if (store_value->getType()->isPointerTy()) {
                         if (store_value->getType()->getPointerElementType()->isFunctionTy()) {
-                            outs() << "A fptr is stored to memory\n";
+                            //outs() << "A fptr is stored to memory\n";
+                            num_funcs_using_fptr++;
                             goto CONT;
                         }
                     }
                     if (store_ptr->getType()->isPointerTy()) {
                         if (store_ptr->getType()->getPointerElementType()->isFunctionTy()) {
-                            outs() << "A fptr is used as target of store\n";
+                            //outs() << "A fptr is used as target of store\n";
+                            num_funcs_using_fptr++;
                             goto CONT;
                         }
                     }
@@ -95,17 +98,38 @@ void FunctionPointerAnalysis::collectFptrAccess(Module& M) {
                     // Value* load_ptr = load->getPointerOperand();
                     if (load->getType()->isPointerTy()) {
                         if (load->getType()->getPointerElementType()->isFunctionTy()) {
-                            outs() << "A fptr is loaded from memory\n";
+                            //outs() << "A fptr is loaded from memory\n";
+                            num_funcs_using_fptr++;
                             goto CONT;
                         }
                     }
                 } else if (CastInst* cast = dyn_cast<CastInst>(&inst)) {
                     if (cast->getType()->isPointerTy()) {
                         if (cast->getType()->getPointerElementType()->isFunctionTy()) {
-                            outs() << "A fptr is loaded from memory\n";
+                            //outs() << "A fptr is loaded from memory\n";
+                            num_funcs_using_fptr++;
                             goto CONT;
                         }
                     }
+                } else if (CallInst* call = dyn_cast<CallInst>(&inst)) {
+                    CallSite cs(&inst);
+                    if (!cs.getCalledFunction()) {
+                        Value* callee_val = cs.getCalledValue();
+                        if (Argument* argument = dyn_cast<Argument>(callee_val)) {
+                           //outs() << "A fptr from argu is called\n";
+                           num_funcs_using_fptr++;
+                           goto CONT;
+                        }
+                    }
+                } else if (PHINode* phi = dyn_cast<PHINode>(&inst)) {
+                    if (phi->getType()->isPointerTy()) {
+                        if (phi->getType()->getPointerElementType()->isFunctionTy()) {
+                            //outs() << "A fptr is loaded from memory\n";
+                            num_funcs_using_fptr++;
+                            goto CONT;
+                        }
+                    }
+
                 }
            }
        }
