@@ -775,6 +775,13 @@ public:
                 }
 
                 const PointsTo& pts = getPts(node->getId());
+                if (node->hasValue()) {
+                    const llvm::Value* node_val = node->getValue();
+                    if (node_val->hasName()) {
+                        llvm::outs() << "\nNode Name: " << node_val->getName() << "\n";
+                    }
+                }
+
                 llvm::outs() << "\nNodeID " << node->getId() << " ";
                 if (pts.empty()) {
                     llvm::outs() << "\t\tPointsTo: {empty}\n\n";

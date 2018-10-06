@@ -474,6 +474,12 @@ void BVDataPTAImpl::dumpTopLevelPtsTo() {
             nIter != this->getAllValidPtrs().end(); ++nIter) {
         const PAGNode* node = getPAG()->getPAGNode(*nIter);
         if (getPAG()->isValidTopLevelPtr(node)) {
+            if (node->hasValue()) {
+                const Value* node_val = node->getValue();
+                if (node_val->hasName()) {
+                    outs() << "\nNode Name: " << node_val->getName() << "\n";
+                }
+            }
             PointsTo& pts = this->getPts(node->getId());
             outs() << "\nNodeID " << node->getId() << " ";
 
