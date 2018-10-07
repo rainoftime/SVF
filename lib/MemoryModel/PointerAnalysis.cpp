@@ -554,25 +554,14 @@ void BVDataPTAImpl::dumpPTSSize() {
 
     for (PAG::iterator it = pag->begin(), eit = pag->end(); it!=eit; it++) {
         total_ptr++;
-    }
+        NodeID node = it->first;
+        PointsTo& pts = this->getPts(node->getId());
+        unsigned sz = pts.count();
 
-    for (NodeBS::iterator nIter = this->getAllValidPtrs().begin();
-            nIter != this->getAllValidPtrs().end(); ++nIter) {
-        const PAGNode* node = getPAG()->getPAGNode(*nIter);
-        if (getPAG()->isValidTopLevelPtr(node)) {
+        if (pag->isValidTopLevelPtr(iter->second) == false) {
+            continue;
+        } else {
             total_top_level_ptr++;
-            /*
-            PointsTo& pts = this->getPts(node->getId());
-            if (pts.empty()) {
-                outs() << "\t\tPointsTo: {empty}\n\n";
-            } else {
-                outs() << "\t\tPointsTo: { ";
-                for (PointsTo::iterator it = pts.begin(), eit = pts.end();
-                        it != eit; ++it)
-                    outs() << *it << " ";
-                outs() << "}\n\n";
-            }
-            */
         }
     }
     total_addr_taken_ptr = total_ptr - total_top_level_ptr;
