@@ -558,7 +558,7 @@ void BVDataPTAImpl::dumpPTSSize() {
         PointsTo& pts = this->getPts(node->getId());
         unsigned sz = pts.count();
 
-        if (pag->isValidTopLevelPtr(iter->second) == false) {
+        if (pag->isValidTopLevelPtr(it->second) == false) {
             continue;
         } else {
             total_top_level_ptr++;
