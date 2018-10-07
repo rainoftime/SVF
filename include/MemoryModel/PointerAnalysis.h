@@ -378,6 +378,7 @@ public:
     virtual void dumpTopLevelPtsTo() {}
     virtual void dumpAllPts() {}
     virtual void dumpCPts() {}
+    virtual void dumpPTSSize() {}
     virtual void dumpPts(NodeID ptr, const PointsTo& pts);
     void printIndCSTargets();
     void dumpAllTypes();
@@ -519,8 +520,12 @@ public:
     virtual void dumpTopLevelPtsTo();
 
     virtual void dumpAllPts();
+
+    virtual void dumpPTSSize();
     //@}
 };
+
+
 
 /*!
  * Pointer analysis implementation which uses conditional points-to map data structure (context/path sensitive analysis)

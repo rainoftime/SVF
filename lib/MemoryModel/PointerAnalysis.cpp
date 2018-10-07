@@ -55,6 +55,9 @@ static cl::opt<bool> PTSPrint("print-pts", cl::init(false),
 static cl::opt<bool> PTSAllPrint("print-all-pts", cl::init(false),
                                  cl::desc("Print all points-to set of both top-level and address-taken variables"));
 
+static cl::opt<bool> PTSSizePrint("print-pts-sz", cl::init(true),
+        cl::desc("Print points-to size stat of pointers"));
+
 static cl::opt<bool> PStat("stat", cl::init(true),
                            cl::desc("Statistic for Pointer analysis"));
 
@@ -247,6 +250,10 @@ void PointerAnalysis::finalize() {
 
     if(PTSAllPrint)
         dumpAllPts();
+
+    if (PTSSizePrint) {
+        dumpPTSSize();
+    }
 
     if (FuncPointerPrint)
         printIndCSTargets();
@@ -500,7 +507,6 @@ void BVDataPTAImpl::dumpTopLevelPtsTo() {
  * Dump points-to of top-level pointers (ValPN)
  */
 void PointerAnalysis::dumpPts(NodeID ptr, const PointsTo& pts) {
-
     const PAGNode* node = pag->getPAGNode(ptr);
     /// print the points-to set of node which has the maximum pts size.
     if (isa<DummyObjPN> (node)) {
@@ -539,6 +545,68 @@ void PointerAnalysis::dumpPts(NodeID ptr, const PointsTo& pts) {
             outs() << "Souce Loc: " << getSourceLoc(pagNode->getValue()) << "] \n";
         }
     }
+}
+
+void BVDataPTAImpl::dumpPTSSize() {
+    unsigned total_ptr = 0;
+    unsigned total_top_level_ptr = 0;
+    unsigned total_addr_taken_ptr = 0;
+
+    for (PAG::iterator it = pag->begin(), eit = pag->end(); it!=eit; it++) {
+        total_ptr++;
+    }
+
+    for (NodeBS::iterator nIter = this->getAllValidPtrs().begin();
+            nIter != this->getAllValidPtrs().end(); ++nIter) {
+        const PAGNode* node = getPAG()->getPAGNode(*nIter);
+        if (getPAG()->isValidTopLevelPtr(node)) {
+            total_top_level_ptr++;
+            /*
+            PointsTo& pts = this->getPts(node->getId());
+            if (pts.empty()) {
+                outs() << "\t\tPointsTo: {empty}\n\n";
+            } else {
+                outs() << "\t\tPointsTo: { ";
+                for (PointsTo::iterator it = pts.begin(), eit = pts.end();
+                        it != eit; ++it)
+                    outs() << *it << " ";
+                outs() << "}\n\n";
+            }
+            */
+        }
+    }
+    total_addr_taken_ptr = total_ptr - total_top_level_ptr;
+
+    outs() << "---------------PTS Statistics Begin-------------------------\n";
+    outs() << "Total pointers: \t" << total_ptr << "\n";
+    outs() << "Total top-lvl pointers: \t" << total_top_level_ptr << "\n";
+    outs() << "Total addr-taken pointers: \t" << total_addr_taken_ptr << "\n";
+
+    outs() << "---------------PTS Statistics End-------------------------\n";
+    /*
+    int pts_bucket[11] = { 0 };
+    int pts_bucket_steps[11] = { 0, 1, 2, 3, 4, 5, 6, 7, 10, 30, 100 };
+
+    pts_bucket[0] = cg_zero;
+
+    llvm::outs() << "\n";
+    llvm::outs() << "---------------PTS Statistics Begin-------------------------\n";
+    outs() << "\n";
+
+    int i;
+    for (i = 0; i < 11 - 1; i++) {
+        if (pts_bucket_steps[i] == pts_bucket_steps[i + 1] - 1)
+            llvm::outs() << "\t" << pts_bucket_steps[i] << ":\t\t";
+        else
+            llvm::outs() << "\t" << pts_bucket_steps[i] << " - " << pts_bucket_steps[i + 1] - 1 << ": \t\t";
+        llvm::outs() << pts_bucket[i] << "\n";
+    }
+    llvm::outs() << "\t>" << pts_bucket_steps[i] << ": \t\t";
+    llvm::outs() << pts_bucket[i] << "\n";
+    llvm::outs() << "\n";
+    llvm::outs() << "---------------PTS Statistics End-------------------------\n";
+    */
+
 }
 
 
