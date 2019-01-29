@@ -96,6 +96,7 @@ bool DDAPass::runOnModule(llvm::Module& module)
 }
 
 /// select a client to initialize queries
+// TODO: select a client by reading a file containing the queries
 void DDAPass::selectClient(llvm::Module& module) {
 
     if (!userInputQuery.empty()) {
@@ -106,7 +107,9 @@ void DDAPass::selectClient(llvm::Module& module) {
         /// allow user specify queries
         else {
             _client = new DDAClient(module);
-            if (userInputQuery != "all") {
+            if (userInputQuery == "all") {
+                _client->setSolveAll();
+            } else {
                 u32_t buf; // Have a buffer
                 stringstream ss(userInputQuery); // Insert the user input string into a stream
                 while (ss >> buf)

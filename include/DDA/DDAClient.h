@@ -63,6 +63,12 @@ public:
         userInput.set(ptr);
         solveAll = false;
     }
+
+    // Set all top-level pointers to be queries
+    void setSolveAll() {
+        solveAll = true;
+    }
+
     /// Get LLVM module
     inline llvm::Module& getModule() const {
         return module;
