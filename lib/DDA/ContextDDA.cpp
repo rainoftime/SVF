@@ -82,6 +82,19 @@ void ContextDDA::computeDDAPts(NodeID id) {
     computeDDAPts(var);
 }
 
+
+const CxtPtSet& ContextDDA::computeDDAPoinsTo(NodeID id) {
+    ContextCond cxt;
+    CxtVar var(cxt, id);
+    return computeDDAPts(var);
+}
+
+void ContextDDA::computeDDAAliaseSet(NodeID id) {
+
+
+}
+
+
 /*!
  * Handle out-of-budget dpm
  */

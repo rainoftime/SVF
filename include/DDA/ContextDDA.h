@@ -46,6 +46,12 @@ public:
     /// Compute points-to set for a context-sensitive pointer
     const CxtPtSet& computeDDAPts(const CxtVar& cxtVar);
 
+    /// Compute the points-to set
+    const CxtPtSet& computeDDAPoinsTo(NodeID id);
+
+    /// Compute the alias set of a given top-level pointer
+    void computeDDAAliaseSet(NodeID id);
+
     /// Handle out-of-budget dpm
     void handleOutOfBudgetDpm(const CxtLocDPItem& dpm);
 
