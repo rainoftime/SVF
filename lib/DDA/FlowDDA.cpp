@@ -9,6 +9,7 @@
 #include "DDA/DDAClient.h"
 #include "Util/AnalysisUtil.h"
 #include <llvm/Support/CommandLine.h>
+#include <set>
 
 using namespace llvm;
 using namespace std;
@@ -45,6 +46,80 @@ void FlowDDA::computeDDAPts(NodeID id)
     DBOUT(DGENERAL,stat->printStatPerQuery(id,getPts(id)));
 }
 
+/*
+ *
+ */
+PointsTo& FlowDDA::computeDDAPoinsTo(NodeID id) {
+    resetQuery();
+    LocDPItem::setMaxBudget(flowBudget);
+
+    PAGNode* node = getPAG()->getPAGNode(id);
+    LocDPItem dpm = getDPIm(node->getId(),getDefSVFGNode(node));
+
+    /// start DDA analysis
+    DOTIMESTAT(double start = DDAStat::getClk());
+    const PointsTo& pts = findPT(dpm);
+    DOTIMESTAT(ddaStat->_AnaTimePerQuery = DDAStat::getClk() - start);
+    DOTIMESTAT(ddaStat->_TotalTimeOfQueries += ddaStat->_AnaTimePerQuery);
+
+    if(isOutOfBudgetQuery() == false)
+        unionPts(node->getId(),pts);
+    else
+        handleOutOfBudgetDpm(dpm);
+
+    // TODO: if OutOfBugdet, should we return pts or Andersen's result?
+    if(this->printStat())
+        DOSTAT(stat->performStatPerQuery(node->getId()));
+
+    DBOUT(DGENERAL,stat->printStatPerQuery(id,getPts(id)));
+
+    return pts;  // is this OK?
+}
+
+bool FlowDDA::mayAlias(NodeID ida, NodeID idb) {
+    PointsTo& ptsa = computeDDAPoinsTo(ida);
+    PointsTo& ptsb = computeDDAPoinsTo(idb);
+
+    // what do containBlackHoleNode mean?
+    if (containBlackHoleNode(ptsa) || containBlackHoleNode(ptsb) || ptsa.intersects(ptsb))
+        return true;
+
+    return false;
+}
+
+/*!
+ * Compute the alias set of a given pointer
+ *
+ */
+void FlowDDA::computeDDAAliaseSet(NodeID id) {
+
+    // First, get the points-to set of id,
+    PointsTo pts = computeDDAPoinsTo(id);
+
+    // Second, query the pointed-by set of the pre- Andersen analysis
+    AliasSet ander_aliases;
+    for (NodeBS::iterator nIter = pts.begin(); nIter != pts.end(); ++nIter) {
+        // TODO: should we also record the pointed-by locations?
+         ander_aliases |= getAndersenAnalysis()->getRevPts(*nIter);
+    }
+
+    // Third, flow-sensitively analyze the pointed-by set
+    //AliasSet fs_aliases;
+    std::set<const Value*> fs_aliases;
+    for (NodeBS::iterator nIter = ander_aliases.begin(); nIter != ander_aliases.end(); ++nIter) {
+        // May issue many demand-driven points-to queries here
+        // TODO: how to "save" the results
+        PointsTo& pt = computeDDAPoinsTo(*nIter);
+        if (pts.intersects(pt)) {
+            //fs_aliases.add(*nIter);
+            PAGNode* node = getPAG()->getPAGNode(*nIter);
+            if (node->isTopLevelPtr() && node->hasValue()) {
+                fs_aliases.insert(node->getValue());
+            }
+        }
+    }
+}
+
 
 /*!
  * Handle out-of-budget dpm
@@ -58,7 +133,6 @@ void FlowDDA::handleOutOfBudgetDpm(const LocDPItem& dpm) {
 }
 
 bool FlowDDA::testIndCallReachability(LocDPItem& dpm, const llvm::Function* callee, CallSiteID csId) {
-
     CallSite cs = getSVFG()->getCallSite(csId);
 
     if(getPAG()->isIndirectCallSites(cs)) {

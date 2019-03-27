@@ -36,8 +36,17 @@ public:
     /// dummy analyze method
     virtual void analyze(llvm::Module& mod) {}
 
-    /// Compute points-to set for all top variable
+    /// Compute points-to set for a variable
     void computeDDAPts(NodeID id);
+
+    /// Compute the points-to set
+    PointsTo& computeDDAPoinsTo(NodeID id);
+
+    /// decide alias
+    bool mayAlias(NodeID ida, NodeID idb);
+
+    /// Compute the alias set of a given top-level pointer
+    void computeDDAAliaseSet(NodeID id);
 
     /// Handle out-of-budget dpm
     void handleOutOfBudgetDpm(const LocDPItem& dpm);
