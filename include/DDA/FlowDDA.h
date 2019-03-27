@@ -40,7 +40,7 @@ public:
     void computeDDAPts(NodeID id);
 
     /// Compute the points-to set
-    PointsTo& computeDDAPoinsTo(NodeID id);
+    PointsTo computeDDAPoinsTo(NodeID id);
 
     /// decide alias
     bool mayAlias(NodeID ida, NodeID idb);

@@ -193,6 +193,9 @@ public:
     /// Compute points-to results on-demand, overridden by derived classes
     virtual void computeDDAPts(NodeID id) {}
 
+    /// Compute alias sets on-demand, overridden by derived classes
+    virtual void computeDDAAliaseSet(NodeID id) {}
+
     /// Interface exposed to users of our pointer analysis, given Location infos
     virtual AliasAnalysis::AliasResult alias(const AliasAnalysis::Location &LocA,
                                     const AliasAnalysis::Location &LocB) = 0;

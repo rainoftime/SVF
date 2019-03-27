@@ -60,6 +60,8 @@ void DDAClient::answerQueries(PointerAnalysis* pta) {
                   " [" << count + 1<< "/" << candidateQueries.count() << "]" << " \n");
             setCurrentQueryPtr(node->getId());
             pta->computeDDAPts(node->getId());
+            // for testing alias set queries
+           // pta->computeDDAAliaseSet(node->getId());
         }
     }
 }

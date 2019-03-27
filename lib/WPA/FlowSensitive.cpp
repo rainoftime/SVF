@@ -517,6 +517,7 @@ bool FlowSensitive::isStrongUpdate(const SVFGNode* node, NodeID& singleton) {
             // Strong update can be made if this points-to target is not heap, array or field-insensitive.
             if (!isHeapMemObj(singleton) && !isArrayMemObj(singleton)
                     && pag->getBaseObj(singleton)->isFieldInsensitive() == false
+                    // TODO: 19/3/20: crash here...
                     && !isLocalVarInRecursiveFun(singleton)) {
                 isSU = true;
             }

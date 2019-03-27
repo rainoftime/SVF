@@ -49,7 +49,7 @@ void FlowDDA::computeDDAPts(NodeID id)
 /*
  *
  */
-PointsTo& FlowDDA::computeDDAPoinsTo(NodeID id) {
+PointsTo FlowDDA::computeDDAPoinsTo(NodeID id) {
     resetQuery();
     LocDPItem::setMaxBudget(flowBudget);
 
@@ -77,8 +77,8 @@ PointsTo& FlowDDA::computeDDAPoinsTo(NodeID id) {
 }
 
 bool FlowDDA::mayAlias(NodeID ida, NodeID idb) {
-    PointsTo& ptsa = computeDDAPoinsTo(ida);
-    PointsTo& ptsb = computeDDAPoinsTo(idb);
+    PointsTo ptsa = computeDDAPoinsTo(ida);
+    PointsTo ptsb = computeDDAPoinsTo(idb);
 
     // what do containBlackHoleNode mean?
     if (containBlackHoleNode(ptsa) || containBlackHoleNode(ptsb) || ptsa.intersects(ptsb))
@@ -102,6 +102,7 @@ void FlowDDA::computeDDAAliaseSet(NodeID id) {
         // TODO: should we also record the pointed-by locations?
          ander_aliases |= getAndersenAnalysis()->getRevPts(*nIter);
     }
+    std::cout << "Andersen alias set size: " << ander_aliases.count() << "\n";
 
     // Third, flow-sensitively analyze the pointed-by set
     //AliasSet fs_aliases;
@@ -109,15 +110,17 @@ void FlowDDA::computeDDAAliaseSet(NodeID id) {
     for (NodeBS::iterator nIter = ander_aliases.begin(); nIter != ander_aliases.end(); ++nIter) {
         // May issue many demand-driven points-to queries here
         // TODO: how to "save" the results
-        PointsTo& pt = computeDDAPoinsTo(*nIter);
-        if (pts.intersects(pt)) {
-            //fs_aliases.add(*nIter);
-            PAGNode* node = getPAG()->getPAGNode(*nIter);
-            if (node->isTopLevelPtr() && node->hasValue()) {
-                fs_aliases.insert(node->getValue());
+        PAGNode* node = getPAG()->getPAGNode(*nIter);
+        if (getPAG()->isValidTopLevelPtr(node) && *nIter != id) {
+            PointsTo pt = computeDDAPoinsTo(*nIter);
+            if (pts.intersects(pt)) {
+                if (node->isTopLevelPtr() && node->hasValue()) {
+                    fs_aliases.insert(node->getValue());
+                }
             }
         }
     }
+    std::cout << "fs alias set size: " << fs_aliases.size() << "\n";
 }
 
 
