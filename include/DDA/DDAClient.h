@@ -26,7 +26,7 @@
  */
 class DDAClient {
 public:
-    DDAClient(llvm::Module& mod) : pag(NULL), module(mod), curPtr(0), solveAll(true) {}
+    DDAClient(llvm::Module& mod) : pag(NULL), module(mod), curPtr(0), solveAll(true), queryAliasSet(false) {}
 
     virtual ~DDAClient() {}
 
@@ -69,6 +69,11 @@ public:
         solveAll = true;
     }
 
+    // Set query alias set
+    void setQueryAliasSet() {
+        queryAliasSet = true;
+    }
+
     /// Get LLVM module
     inline llvm::Module& getModule() const {
         return module;
@@ -101,6 +106,7 @@ protected:
 private:
     NodeBS userInput;           ///< User input queries
     bool solveAll;				///< TRUE if all top level pointers are being queried
+    bool queryAliasSet;              ///< Query the alias set
 };
 
 
@@ -134,6 +140,45 @@ public:
     }
     virtual void performStat(PointerAnalysis* pta);
 };
+
+
+/**
+ * DDA client with function pointers as query candidates.
+ */
+class TaintDDAClient : public DDAClient {
+private:
+    //typedef std::map<NodeID,llvm::CallSite> VTablePtrToCallSiteMap;
+
+    std::vector<std::pair<llvm::Value*, int>> PointerAliasSetSize;
+public:
+    TaintDDAClient(llvm::Module& module) : DDAClient(module) {}
+    ~TaintDDAClient() {}
+
+    ///
+    virtual inline NodeBS& collectCandidateQueries(PAG* p) {
+        setPAG(p);
+        if (llvm::Function* checkFun = module.getFunction("pp_check_alias_set")) {
+            for (llvm::Value::user_iterator i = checkFun->user_begin(),
+                    e = checkFun->user_end(); i != e; ++i) {
+                //llvm::outs() << " Find pp_check_alias_set call!\n";
+
+                if (llvm::CallInst *call = llvm::dyn_cast<llvm::CallInst>(*i)) {
+                    assert( call->getNumArgOperands() == 1 && "arguments should be one pointer!!");
+                    llvm::Value* val = call->getArgOperand(0);
+                    NodeID ptrId = pag->getValueNode(val);
+                    addCandidate(ptrId);
+                    PointerAliasSetSize.push_back(std::make_pair(val, 0));
+                } else {
+                    assert( false && "alias check functions not only used at callsite??");
+                }
+            }
+        }
+        return candidateQueries;
+    }
+    virtual void performStat(PointerAnalysis* pta);
+};
+
+
 
 
 #endif /* DDACLIENT_H_ */

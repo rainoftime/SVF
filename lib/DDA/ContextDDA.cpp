@@ -89,9 +89,10 @@ const CxtPtSet& ContextDDA::computeDDAPoinsTo(NodeID id) {
     return computeDDAPts(var);
 }
 
-void ContextDDA::computeDDAAliaseSet(NodeID id) {
+int ContextDDA::computeDDAAliaseSet(NodeID id) {
+    // TODO: to be implemented !!
 
-
+    return 0;
 }
 
 

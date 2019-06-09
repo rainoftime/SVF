@@ -91,7 +91,7 @@ bool FlowDDA::mayAlias(NodeID ida, NodeID idb) {
  * Compute the alias set of a given pointer
  *
  */
-void FlowDDA::computeDDAAliaseSet(NodeID id) {
+int FlowDDA::computeDDAAliaseSet(NodeID id) {
 
     // First, get the points-to set of id,
     PointsTo pts = computeDDAPoinsTo(id);
@@ -121,6 +121,7 @@ void FlowDDA::computeDDAAliaseSet(NodeID id) {
         }
     }
     std::cout << "fs alias set size: " << fs_aliases.size() << "\n";
+    return fs_aliases.size();
 }
 
 

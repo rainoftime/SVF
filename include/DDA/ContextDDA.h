@@ -50,7 +50,7 @@ public:
     const CxtPtSet& computeDDAPoinsTo(NodeID id);
 
     /// Compute the alias set of a given top-level pointer
-    void computeDDAAliaseSet(NodeID id);
+    int computeDDAAliaseSet(NodeID id);
 
     /// Handle out-of-budget dpm
     void handleOutOfBudgetDpm(const CxtLocDPItem& dpm);

@@ -105,6 +105,10 @@ void DDAPass::selectClient(llvm::Module& module) {
             _client = new FunptrDDAClient(module);
         }
         /// allow user specify queries
+        else if (userInputQuery == "taint") {
+            _client = new TaintDDAClient(module);
+            _client->setQueryAliasSet();
+        }
         else {
             _client = new DDAClient(module);
             if (userInputQuery == "all") {

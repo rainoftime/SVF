@@ -59,9 +59,14 @@ void DDAClient::answerQueries(PointerAnalysis* pta) {
             DBOUT(DDDA,outs() << "\n@@Computing PointsTo for :" << node->getId() <<
                   " [" << count + 1<< "/" << candidateQueries.count() << "]" << " \n");
             setCurrentQueryPtr(node->getId());
-            pta->computeDDAPts(node->getId());
-            // for testing alias set queries
-           // pta->computeDDAAliaseSet(node->getId());
+
+
+            if (queryAliasSet) {
+                // answer alias set: currently for taint client
+                int size = pta->computeDDAAliaseSet(node->getId());
+            } else {
+                pta->computeDDAPts(node->getId());
+            }
         }
     }
 }
