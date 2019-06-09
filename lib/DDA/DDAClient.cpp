@@ -206,3 +206,12 @@ void FunptrDDAClient::performStat(PointerAnalysis* pta) {
 #endif
 }
 
+
+
+void TaintDDAClient::performStat(PointerAnalysis* pta) {  
+
+
+
+}
+
+
