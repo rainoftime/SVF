@@ -46,7 +46,7 @@ public:
     bool mayAlias(NodeID ida, NodeID idb);
 
     /// Compute the alias set of a given top-level pointer
-    int computeDDAAliaseSet(NodeID id);
+    std::pair<unsigned, unsigned> computeDDAAliaseSet(NodeID id);
 
     /// Handle out-of-budget dpm
     void handleOutOfBudgetDpm(const LocDPItem& dpm);

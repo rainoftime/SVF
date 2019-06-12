@@ -89,10 +89,39 @@ const CxtPtSet& ContextDDA::computeDDAPoinsTo(NodeID id) {
     return computeDDAPts(var);
 }
 
-int ContextDDA::computeDDAAliaseSet(NodeID id) {
+std::pair<unsigned, unsigned> ContextDDA::computeDDAAliaseSet(NodeID id) {
     // TODO: to be implemented !!
 
-    return 0;
+    // First, get the points-to set of id,
+    PointsTo pts = computeDDAPoinsTo(id);
+
+    // Second, query the pointed-by set of the pre- Andersen analysis
+    AliasSet ander_aliases;
+    for (NodeBS::iterator nIter = pts.begin(); nIter != pts.end(); ++nIter) {
+        // TODO: should we also record the pointed-by locations?
+         ander_aliases |= getAndersenAnalysis()->getRevPts(*nIter);
+    }
+    std::cout << "Andersen alias set size: " << ander_aliases.count() << "\n";
+
+    // Third, context-sensitively analyze the pointed-by set
+    //AliasSet fs_aliases;
+    std::set<const Value*> fscs_aliases;
+    for (NodeBS::iterator nIter = ander_aliases.begin(); nIter != ander_aliases.end(); ++nIter) {
+        // May issue many demand-driven points-to queries here
+        // TODO: how to "save" the results
+        PAGNode* node = getPAG()->getPAGNode(*nIter);
+        if (getPAG()->isValidTopLevelPtr(node) && *nIter != id) {
+            PointsTo pt = computeDDAPoinsTo(*nIter);
+            if (pts.intersects(pt)) {
+                if (node->isTopLevelPtr() && node->hasValue()) {
+                    fscs_aliases.insert(node->getValue());
+                }
+            }
+        }
+    }
+    std::cout << "FSCS alias set size: " << fscs_aliases.size() << "\n";
+    return std::make_pair(ander_aliases.count(), fscs_aliases.size());
+    // return fscs_aliases.size();
 }
 
 

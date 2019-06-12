@@ -74,6 +74,17 @@ public:
         queryAliasSet = true;
     }
 
+    // Set query alias set
+    void setQueryAliasSetSize(llvm::Value *val, std::pair<unsigned, unsigned> sz) {
+        for (unsigned i = 0; i < DDAAliasSetSize.size(); i++) {
+            if (DDAAliasSetSize[i].first == val) {
+                DDAAliasSetSize[i].second = sz.second;
+                AndersenAliasSetSize[i].second = sz.first;
+                break;
+            }
+        }
+    }
+
     /// Get LLVM module
     inline llvm::Module& getModule() const {
         return module;
@@ -106,7 +117,9 @@ protected:
 private:
     NodeBS userInput;           ///< User input queries
     bool solveAll;				///< TRUE if all top level pointers are being queried
-    bool queryAliasSet;              ///< Query the alias set
+    bool queryAliasSet;         ///< Query the alias set
+    std::vector<std::pair<llvm::Value*, int>> DDAAliasSetSize; ///< Demand-driven Alias
+    std::vector<std::pair<llvm::Value*, int>> AndersenAliasSetSize; ///< Alias
 };
 
 
@@ -147,9 +160,7 @@ public:
  */
 class TaintDDAClient : public DDAClient {
 private:
-    //typedef std::map<NodeID,llvm::CallSite> VTablePtrToCallSiteMap;
 
-    std::vector<std::pair<llvm::Value*, int>> PointerAliasSetSize;
 public:
     TaintDDAClient(llvm::Module& module) : DDAClient(module) {}
     ~TaintDDAClient() {}
@@ -167,7 +178,8 @@ public:
                     llvm::Value* val = call->getArgOperand(0);
                     NodeID ptrId = pag->getValueNode(val);
                     addCandidate(ptrId);
-                    PointerAliasSetSize.push_back(std::make_pair(val, 0));
+                    DDAAliasSetSize.push_back(std::make_pair(val, 0));
+                    AndersenAliasSetSize.push_back(std::make_pair(val, 0));
                 } else {
                     assert( false && "alias check functions not only used at callsite??");
                 }
