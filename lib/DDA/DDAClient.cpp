@@ -64,7 +64,7 @@ void DDAClient::answerQueries(PointerAnalysis* pta) {
             if (queryAliasSet) {
                 // answer alias set: currently for taint client
                 std::pair<unsigned, unsigned> size = pta->computeDDAAliaseSet(node->getId());
-                llvm::Value* val = node->getValue();
+                const llvm::Value* val = node->getValue();
                 setQueryAliasSetSize(val, size);
             } else {
                 pta->computeDDAPts(node->getId());
@@ -219,15 +219,15 @@ void TaintDDAClient::performStat(PointerAnalysis* pta) {
         ander_total_sz += AndersenAliasSetSize[i].second;
     }
 
-    llvm::outs() << "--------Demand-Driven Alias Set Analysis Statistics Begin------\n";
+    llvm::outs() << "-----Demand-Driven Alias Set Analysis Statistics Begin------\n";
 
     llvm::outs() <<     "==== Query Number: ==== " << query_num << "\n";
     if (query_num > 0) {
-        llvm::outs() << "==== Andersen Average Size: ==== " << dda_total_sz / query_num << "\n";
+        llvm::outs() << "==== Andersen Average Size: ==== " << ander_total_sz / query_num << "\n";
         llvm::outs() << "==== DDA Average Size:      ==== " << dda_total_sz / query_num << "\n";
     }
 
-    llvm::outs() << "--------Demand-Driven Alias Set Analysis Statistics Enc------\n";
+    llvm::outs() << "----- Demand-Driven Alias Set Analysis Statistics Enc------\n";
 }
 
 

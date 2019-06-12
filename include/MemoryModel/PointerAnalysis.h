@@ -194,7 +194,7 @@ public:
     virtual void computeDDAPts(NodeID id) {}
 
     /// Compute alias sets on-demand, overridden by derived classes
-    virtual std::pair<unsigned, unsigned> computeDDAAliaseSet(NodeID id) { return 0; }
+    virtual std::pair<unsigned, unsigned> computeDDAAliaseSet(NodeID id) { return std::make_pair(0, 0); }
 
     /// Interface exposed to users of our pointer analysis, given Location infos
     virtual AliasAnalysis::AliasResult alias(const AliasAnalysis::Location &LocA,

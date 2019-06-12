@@ -75,7 +75,7 @@ public:
     }
 
     // Set query alias set
-    void setQueryAliasSetSize(llvm::Value *val, std::pair<unsigned, unsigned> sz) {
+    void setQueryAliasSetSize(const llvm::Value *val, std::pair<unsigned, unsigned> sz) {
         for (unsigned i = 0; i < DDAAliasSetSize.size(); i++) {
             if (DDAAliasSetSize[i].first == val) {
                 DDAAliasSetSize[i].second = sz.second;
@@ -109,17 +109,17 @@ protected:
             candidateQueries.set(id);
     }
 
-    PAG*   pag;					///< PAG graph used by current DDA analysis
+    PAG*   pag;				///< PAG graph used by current DDA analysis
     llvm::Module& module;		///< LLVM module
-    NodeID curPtr;				///< current pointer being queried
-    NodeBS candidateQueries;	///< store all candidate pointers to be queried
+    NodeID curPtr;	                ///< current pointer being queried
+    NodeBS candidateQueries;	        ///< store all candidate pointers to be queried
 
+    std::vector<std::pair<llvm::Value*, int>> DDAAliasSetSize;      ///< Demand-driven AliasSet
+    std::vector<std::pair<llvm::Value*, int>> AndersenAliasSetSize; ///< Andersen AliasSet
 private:
     NodeBS userInput;           ///< User input queries
-    bool solveAll;				///< TRUE if all top level pointers are being queried
+    bool solveAll;		///< TRUE if all top level pointers are being queried
     bool queryAliasSet;         ///< Query the alias set
-    std::vector<std::pair<llvm::Value*, int>> DDAAliasSetSize; ///< Demand-driven Alias
-    std::vector<std::pair<llvm::Value*, int>> AndersenAliasSetSize; ///< Alias
 };
 
 

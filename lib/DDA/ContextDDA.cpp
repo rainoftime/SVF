@@ -91,9 +91,9 @@ const CxtPtSet& ContextDDA::computeDDAPoinsTo(NodeID id) {
 
 std::pair<unsigned, unsigned> ContextDDA::computeDDAAliaseSet(NodeID id) {
     // TODO: to be implemented !!
-
+#if 0
     // First, get the points-to set of id,
-    PointsTo pts = computeDDAPoinsTo(id);
+    CxtPtSet pts = computeDDAPoinsTo(id);
 
     // Second, query the pointed-by set of the pre- Andersen analysis
     AliasSet ander_aliases;
@@ -111,7 +111,7 @@ std::pair<unsigned, unsigned> ContextDDA::computeDDAAliaseSet(NodeID id) {
         // TODO: how to "save" the results
         PAGNode* node = getPAG()->getPAGNode(*nIter);
         if (getPAG()->isValidTopLevelPtr(node) && *nIter != id) {
-            PointsTo pt = computeDDAPoinsTo(*nIter);
+            CxtPtSet pt = computeDDAPoinsTo(*nIter);
             if (pts.intersects(pt)) {
                 if (node->isTopLevelPtr() && node->hasValue()) {
                     fscs_aliases.insert(node->getValue());
@@ -120,8 +120,9 @@ std::pair<unsigned, unsigned> ContextDDA::computeDDAAliaseSet(NodeID id) {
         }
     }
     std::cout << "FSCS alias set size: " << fscs_aliases.size() << "\n";
-    return std::make_pair(ander_aliases.count(), fscs_aliases.size());
-    // return fscs_aliases.size();
+#endif
+    //return std::make_pair(ander_aliases.count(), fscs_aliases.size());
+    return std::make_pair(0, 0);
 }
 
 
