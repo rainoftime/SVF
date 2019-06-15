@@ -264,11 +264,11 @@ public:
         for (auto& Query : DDASourceDstMap) {
             llvm::Value* Src = Query.first;
             std::vector<llvm::Value*> Dsts = Query.second;
-            llvm::outs() << "Source: ";
-            Src->dump();
+            //llvm::outs() << "Source: ";
+            //Src->dump();
             for (unsigned I = 0; I < Dsts.size(); I++) {
-                llvm::outs() << "   Dst: ";
-                Dsts[I]->dump();
+                //llvm::outs() << "   Dst: ";
+                //Dsts[I]->dump();
             }
         }
         return candidateQueries;

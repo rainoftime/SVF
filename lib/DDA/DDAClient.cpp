@@ -259,9 +259,23 @@ void TaintDDAClient::performStat(PointerAnalysis* pta) {
 
 
 void SecurityDDAClient::performStat(PointerAnalysis* pta) {
+    int totalQuery = 0;
+    int totalAnderNotAlias = 0;
+    int totalDDANotAlias = 0;
+    // Print the queries
+    for (auto& Query : DDASourceDstMap) {
+        llvm::Value* Src = Query.first;
+        std::vector<llvm::Value*> Dsts = Query.second;
+        for (unsigned I = 0; I < Dsts.size(); I++) {
+            totalQuery++;
+            if (!AnderSourceDstResult[Src][I]) totalAnderNotAlias++;
+            if (!DDASourceDstResult[Src][I]) totalDDANotAlias++;
+        }
+    }
     llvm::outs() << "-----Demand-Driven Alias Pair Analysis Statistics Begin------\n";
-
-
+    llvm::outs() << "==== Query Number: ==== " << totalQuery << "\n"; 
+    llvm::outs() << "==== Andersen not alias: ==== " << totalAnderNotAlias << "\n";
+    llvm::outs() << "==== DDA not alias: ==== " << totalDDANotAlias << "\n"; 
 
     llvm::outs() << "-----Demand-Driven Alias Pair Analysis Statistics End------\n";
 }

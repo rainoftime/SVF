@@ -58,7 +58,9 @@ std::pair<bool, bool> FlowDDA::computeDDAMayAlias(NodeID ida, NodeID idb) {
     PointsTo ptsb = computeDDAPoinsTo(idb);
 
     // what do containBlackHoleNode mean?
+
     if (containBlackHoleNode(ptsa) || containBlackHoleNode(ptsb) || ptsa.intersects(ptsb)) {
+    //if (ptsa.intersects(ptsb)) {
         fs_alias = true;
     }
     return std::make_pair(ander_alias, fs_alias);
