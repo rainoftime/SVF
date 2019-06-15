@@ -48,6 +48,32 @@ static cl::opt<bool> TaintUninitStack("uninit-stack", cl::init(true),
 void DDAClient::answerQueries(PointerAnalysis* pta) {
 
     collectCandidateQueries(pta->getPAG());
+    if (queryAliasPair) {
+        // Print the queries
+        for (auto& Query : DDASourceDstMap) {
+            llvm::Value* Src = Query.first;
+            std::vector<llvm::Value*> Dsts = Query.second;
+            for (unsigned I = 0; I < Dsts.size(); I++) {
+                Value *DstI = Dsts[I];
+                NodeID srcId = pag->getValueNode(Src);
+                NodeID dstIId = pag->getValueNode(DstI);
+                if (pag->isValidTopLevelPtr(pag->getPAGNode(srcId)) &&
+                        pag->isValidTopLevelPtr(pag->getPAGNode(dstIId))) {
+
+                    std::pair<bool, bool> res = pta->computeDDAMayAlias(srcId, dstIId);
+                    if (!res.first) {
+                        AnderSourceDstResult[Src][I] = false;
+                    }
+                    if (!res.second) {
+                        DDASourceDstResult[Src][I] = false;
+                    }
+
+                    // pta->getAndersenAnalysis();
+                }
+            }
+        }
+        return;
+    }
 
     u32_t count = 0;
     for (NodeBS::iterator nIter = candidateQueries.begin();
@@ -227,7 +253,17 @@ void TaintDDAClient::performStat(PointerAnalysis* pta) {
         llvm::outs() << "==== DDA Average Size:      ==== " << dda_total_sz / query_num << "\n";
     }
 
-    llvm::outs() << "----- Demand-Driven Alias Set Analysis Statistics Enc------\n";
+    llvm::outs() << "----- Demand-Driven Alias Set Analysis Statistics End------\n";
+}
+
+
+
+void SecurityDDAClient::performStat(PointerAnalysis* pta) {
+    llvm::outs() << "-----Demand-Driven Alias Pair Analysis Statistics Begin------\n";
+
+
+
+    llvm::outs() << "-----Demand-Driven Alias Pair Analysis Statistics End------\n";
 }
 
 

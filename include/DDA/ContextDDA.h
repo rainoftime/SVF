@@ -43,6 +43,9 @@ public:
     /// Compute points-to set for an unconditional pointer
     void computeDDAPts(NodeID id);
 
+    ///
+    std::pair<bool, bool> computeDDAMayAlias(NodeID ida, NodeID idb);
+
     /// Compute points-to set for a context-sensitive pointer
     const CxtPtSet& computeDDAPts(const CxtVar& cxtVar);
 

@@ -108,6 +108,9 @@ void DDAPass::selectClient(llvm::Module& module) {
         else if (userInputQuery == "taint") {
             _client = new TaintDDAClient(module);
             _client->setQueryAliasSet();
+        } else if (userInputQuery == "security") {
+            _client = new SecurityDDAClient(module);
+            _client->setQueryAliasPair();
         }
         else {
             _client = new DDAClient(module);

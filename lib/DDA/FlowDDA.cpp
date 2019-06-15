@@ -46,6 +46,24 @@ void FlowDDA::computeDDAPts(NodeID id)
     DBOUT(DGENERAL,stat->printStatPerQuery(id,getPts(id)));
 }
 
+
+std::pair<bool, bool> FlowDDA::computeDDAMayAlias(NodeID ida, NodeID idb) {
+    bool ander_alias = false, fs_alias = false;
+    PointsTo& ander_ptsa = getAndersenAnalysis()->getPts(ida);
+    PointsTo& ander_ptsb = getAndersenAnalysis()->getPts(idb);
+    if (ander_ptsa.intersects(ander_ptsb)) {
+        ander_alias = true;
+    }
+    PointsTo ptsa = computeDDAPoinsTo(ida);
+    PointsTo ptsb = computeDDAPoinsTo(idb);
+
+    // what do containBlackHoleNode mean?
+    if (containBlackHoleNode(ptsa) || containBlackHoleNode(ptsb) || ptsa.intersects(ptsb)) {
+        fs_alias = true;
+    }
+    return std::make_pair(ander_alias, fs_alias);
+}
+
 /*
  *
  */

@@ -193,6 +193,9 @@ public:
     /// Compute points-to results on-demand, overridden by derived classes
     virtual void computeDDAPts(NodeID id) {}
 
+    /// Answer may-alias on-demand
+    virtual std::pair<bool, bool> computeDDAMayAlias(NodeID ida, NodeID idb) { return std::make_pair(true, true); }
+
     /// Compute alias sets on-demand, overridden by derived classes
     virtual std::pair<unsigned, unsigned> computeDDAAliaseSet(NodeID id) { return std::make_pair(0, 0); }
 

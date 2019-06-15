@@ -20,13 +20,16 @@
 #include "Util/CPPUtil.h"
 #include <llvm/IR/DataLayout.h>
 
+#include <map>
+#include <vector>
 
 /**
  * General DDAClient which queries all top level pointers by default.
  */
 class DDAClient {
 public:
-    DDAClient(llvm::Module& mod) : pag(NULL), module(mod), curPtr(0), solveAll(true), queryAliasSet(false) {}
+    DDAClient(llvm::Module& mod) : pag(NULL), module(mod), curPtr(0),
+        solveAll(true), queryAliasSet(false), queryAliasPair(false) {}
 
     virtual ~DDAClient() {}
 
@@ -74,6 +77,11 @@ public:
         queryAliasSet = true;
     }
 
+    // Set query alias pair
+    void setQueryAliasPair() {
+        queryAliasPair = true;
+    }
+
     // Set query alias set
     void setQueryAliasSetSize(const llvm::Value *val, std::pair<unsigned, unsigned> sz) {
         for (unsigned i = 0; i < DDAAliasSetSize.size(); i++) {
@@ -109,17 +117,24 @@ protected:
             candidateQueries.set(id);
     }
 
-    PAG*   pag;				///< PAG graph used by current DDA analysis
+    PAG*   pag;				    ///< PAG graph used by current DDA analysis
     llvm::Module& module;		///< LLVM module
-    NodeID curPtr;	                ///< current pointer being queried
-    NodeBS candidateQueries;	        ///< store all candidate pointers to be queried
+    NodeID curPtr;	            ///< current pointer being queried
+    NodeBS candidateQueries;	///< store all candidate pointers to be queried
 
     std::vector<std::pair<llvm::Value*, int>> DDAAliasSetSize;      ///< Demand-driven AliasSet
     std::vector<std::pair<llvm::Value*, int>> AndersenAliasSetSize; ///< Andersen AliasSet
+
+    std::map<llvm::Value*, std::vector<llvm::Value*>> DDASourceDstMap; ///< Demand-driven alias pair
+    std::map<llvm::Value*, std::vector<bool>> DDASourceDstResult;      ///< alias pair result
+    std::map<llvm::Value*, std::vector<bool>> AnderSourceDstResult;    ///< Andersen alias pair result
+
 private:
     NodeBS userInput;           ///< User input queries
-    bool solveAll;		///< TRUE if all top level pointers are being queried
+    bool solveAll;		        ///< TRUE if all top level pointers are being queried
     bool queryAliasSet;         ///< Query the alias set
+    bool queryAliasPair;        ///< Query the alias pair
+
 };
 
 
@@ -156,7 +171,7 @@ public:
 
 
 /**
- * DDA client with function pointers as query candidates.
+ * DDA client that answers alias set
  */
 class TaintDDAClient : public DDAClient {
 private:
@@ -183,6 +198,77 @@ public:
                 } else {
                     assert( false && "alias check functions not only used at callsite??");
                 }
+            }
+        }
+        return candidateQueries;
+    }
+    virtual void performStat(PointerAnalysis* pta);
+};
+
+/**
+ * DDA client that answers alias pair
+ */
+class SecurityDDAClient : public DDAClient {
+private:
+
+public:
+    SecurityDDAClient(llvm::Module& module) : DDAClient(module) {}
+    ~SecurityDDAClient() {}
+
+    ///
+    virtual inline NodeBS& collectCandidateQueries(PAG* p) {
+        setPAG(p);
+
+        if (llvm::Function* sourceFun = module.getFunction("pp_is_source")) {
+            for (llvm::Value::user_iterator I = sourceFun->user_begin(),
+                    E = sourceFun->user_end(); I != E; ++I) {
+                // llvm::outs() << " Find pp_check_alias_pair call!\n";
+                if (llvm::CallInst *Call = llvm::dyn_cast<llvm::CallInst>(*I)) {
+                    assert(Call->getNumArgOperands() == 1 && "arguments should be one!!");
+                    llvm::Value* Source = Call->getArgOperand(0);
+                    llvm::Instruction *prevInst = Call->getPrevNode();
+                    if (!prevInst) continue;
+                    if (llvm::CallInst *prevCall = llvm::dyn_cast<llvm::CallInst>(prevInst)) {
+                        if (!prevCall->getCalledFunction()) continue;
+                        if (prevCall->getCalledFunction()->getName() != "pp_check_alias_pair") continue;
+                        // llvm::outs() << "Find Source: " << Source->getName() << "\n";
+
+                        llvm::Value* Index = prevCall->getArgOperand(0);
+                        std::vector<llvm::Value*> TmpDstVec;
+                        std::vector<bool> TmpResVec;
+                        std::vector<bool> TmpAnderResVec;
+                        // Find the Dst
+                        if (llvm::Function* checkFun = module.getFunction("pp_check_alias_pair")) {
+                            for (llvm::Value::user_iterator II = checkFun->user_begin(),
+                                    EE = checkFun->user_end(); II != EE; ++II) {
+                                if (llvm::CallInst *DstCall = llvm::dyn_cast<llvm::CallInst>(*II)) {
+                                    if (DstCall == prevCall) continue;
+                                    llvm::Value *DstIndex = DstCall->getArgOperand(0);
+                                    if (DstIndex != Index) continue;
+                                    llvm::Value *DstVal = DstCall->getArgOperand(1);
+                                    TmpDstVec.push_back(DstVal);
+                                    TmpResVec.push_back(true);
+                                    TmpAnderResVec.push_back(true);
+                                }
+                            }
+                        }
+                        DDASourceDstMap[Source] = TmpDstVec;
+                        DDASourceDstResult[Source] = TmpResVec;
+                        AnderSourceDstResult[Source] = TmpAnderResVec;
+                    }
+                }
+            }
+        }
+
+        // Print the queries
+        for (auto& Query : DDASourceDstMap) {
+            llvm::Value* Src = Query.first;
+            std::vector<llvm::Value*> Dsts = Query.second;
+            llvm::outs() << "Source: ";
+            Src->dump();
+            for (unsigned I = 0; I < Dsts.size(); I++) {
+                llvm::outs() << "   Dst: ";
+                Dsts[I]->dump();
             }
         }
         return candidateQueries;

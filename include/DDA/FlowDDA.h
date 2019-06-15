@@ -39,6 +39,9 @@ public:
     /// Compute points-to set for a variable
     void computeDDAPts(NodeID id);
 
+    ///
+    std::pair<bool, bool> computeDDAMayAlias(NodeID ida, NodeID idb);
+
     /// Compute the points-to set
     PointsTo computeDDAPoinsTo(NodeID id);
 
