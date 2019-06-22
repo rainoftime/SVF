@@ -37,18 +37,23 @@ using namespace analysisUtil;
 
 char DoubleFreeChecker::ID = 0;
 
+static unsigned DoubleFreeReportIndex = 0;
+
 static RegisterPass<DoubleFreeChecker> DFREECHECKER("dfree-checker",
         "File Open/Close Checker");
 
 void DoubleFreeChecker::reportBug(ProgSlice* slice) {
 
+
     if(isSatisfiableForPairs(slice) == false) {
         const SVFGNode* src = slice->getSource();
         CallSite cs = getSrcCSID(src);
+        outs() << "+++++" << ++DoubleFreeReportIndex << "+++++\n";
         errs() << bugMsg2("\t Double Free :") <<  " memory allocation at : ("
                << getSourceLoc(cs.getInstruction()) << ")\n";
         errs() << "\t\t double free path: \n" << slice->evalFinalCond() << "\n";
         slice->annotatePaths();
+        outs() << "\n\n";
     }
 }
 

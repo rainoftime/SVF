@@ -13,6 +13,8 @@
 #include <iostream>
 #include <iomanip>	// for std::setw
 #include <llvm/Support/CommandLine.h> // for tool output file
+#include <time.h>
+#include <chrono>
 
 using namespace llvm;
 using namespace analysisUtil;
@@ -49,6 +51,7 @@ void DDAClient::answerQueries(PointerAnalysis* pta) {
 
     collectCandidateQueries(pta->getPAG());
     if (queryAliasPair) {
+        std::chrono::high_resolution_clock::time_point ItStart = std::chrono::high_resolution_clock::now();
         // Print the queries
         for (auto& Query : DDASourceDstMap) {
             llvm::Value* Src = Query.first;
@@ -72,6 +75,9 @@ void DDAClient::answerQueries(PointerAnalysis* pta) {
                 }
             }
         }
+        std::chrono::high_resolution_clock::time_point ItFinish = std::chrono::high_resolution_clock::now();
+        auto Duration = std::chrono::duration_cast<std::chrono::microseconds> (ItFinish-ItStart).count();
+
         return;
     }
 
