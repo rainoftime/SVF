@@ -23,6 +23,8 @@
 #include <map>
 #include <vector>
 
+#include "SABER/SaberCheckerAPI.h"
+
 /**
  * General DDAClient which queries all top level pointers by default.
  */
@@ -200,6 +202,46 @@ public:
                 }
             }
         }
+
+        // Find no instrumentation; collect by self..
+        if (DDAAliasSetSize.size() == 0) {
+            for (llvm::Function& fun : module) {
+                for (llvm::BasicBlock& bb : fun) {
+                    for (llvm::Instruction& inst : bb) {
+                        if (llvm::CallInst *call = dyn_cast<llvm::CallInst>(&inst)) {
+                            if (call->getCalledFunction() == nullptr) continue;
+                            llvm::Function* callee = call->getCalledFunction();
+                            if (!callee) continue;
+                            if (SaberCheckerAPI::getCheckerAPI()->isMemDealloc(callee)) {
+                                call->getNumArgOperands();
+                                unsigned int num_args = call->getNumArgOperands();
+                                if (num_args != 1) continue;
+                                llvm::Value* arg = call->getArgOperand(0);
+                                if (!arg->getType()->isPointerTy()) continue;
+                                llvm::Type *pointedTy = arg->getType()->getPointerElementType();
+                                if (pointedTy->isAggregateType() ||  pointedTy->isVectorTy()) {
+                                    continue;
+                                }
+                                bool addToQuery = true;
+                                for (unsigned i = 0; i < DDAAliasSetSize.size(); i++) {
+                                    if (DDAAliasSetSize[i].first == arg) {
+                                        addToQuery = false; break;
+                                    }
+                                }
+                                if (addToQuery) {
+                                    DDAAliasSetSize.push_back(std::make_pair(arg, 0));
+                                    AndersenAliasSetSize.push_back(std::make_pair(arg, 0));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        llvm::outs() << "Query size: " << DDAAliasSetSize.size() << "\n";
+
+
         return candidateQueries;
     }
     virtual void performStat(PointerAnalysis* pta);
