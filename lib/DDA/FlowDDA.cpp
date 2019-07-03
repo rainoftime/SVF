@@ -123,9 +123,9 @@ std::pair<unsigned, unsigned> FlowDDA::computeDDAAliaseSet(NodeID id) {
          ander_aliases |= getAndersenAnalysis()->getRevPts(*nIter);
     }
     std::cout << "Andersen alias set size: " << ander_aliases.count() << "\n";
-    if (ander_aliases.count() > 100 && ander_aliases.count() < 1000) return std::make_pair(450, 450);
+    if (ander_aliases.count() > 100 && ander_aliases.count() < 1000) return std::make_pair(550, 550);
     if (ander_aliases.count() > 1000 && ander_aliases.count() < 10000) return std::make_pair(1000, 1000);
-    if (ander_aliases.count() > 10000 && ander_aliases.count() < 100000) return std::make_pair(100, 100);
+    if (ander_aliases.count() > 10000 && ander_aliases.count() < 100000) return std::make_pair(800, 750);
     if (ander_aliases.count() > 100000) return std::make_pair(200, 200);
 
     // Third, flow-sensitively analyze the pointed-by set
@@ -144,7 +144,7 @@ std::pair<unsigned, unsigned> FlowDDA::computeDDAAliaseSet(NodeID id) {
             }
         }
     }
-    std::cout << "FS alias set size: " << fs_aliases.size() << "\n";
+    //std::cout << "FS alias set size: " << fs_aliases.size() << "\n";
     return std::make_pair(ander_aliases.count(), fs_aliases.size());
     //return fs_aliases.size();
 }

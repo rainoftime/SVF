@@ -23,7 +23,7 @@
 #include <map>
 #include <vector>
 
-#include "SABER/SaberCheckerAPI.h"
+//#include "SABER/SaberCheckerAPI.h"
 
 /**
  * General DDAClient which queries all top level pointers by default.
@@ -203,25 +203,29 @@ public:
             }
         }
 
+        llvm::outs() << "Find no instrumentaion, will collect source auto.\n";
         // Find no instrumentation; collect by self..
         if (DDAAliasSetSize.size() == 0) {
             for (llvm::Function& fun : module) {
                 for (llvm::BasicBlock& bb : fun) {
                     for (llvm::Instruction& inst : bb) {
-                        if (llvm::CallInst *call = dyn_cast<llvm::CallInst>(&inst)) {
+                        if (llvm::CallInst *call = llvm::dyn_cast<llvm::CallInst>(&inst)) {
                             if (call->getCalledFunction() == nullptr) continue;
                             llvm::Function* callee = call->getCalledFunction();
                             if (!callee) continue;
-                            if (SaberCheckerAPI::getCheckerAPI()->isMemDealloc(callee)) {
+                            llvm::StringRef fname = callee->getName();
+
+                            if (fname == "free" || fname == "cfree") {
                                 call->getNumArgOperands();
                                 unsigned int num_args = call->getNumArgOperands();
                                 if (num_args != 1) continue;
                                 llvm::Value* arg = call->getArgOperand(0);
                                 if (!arg->getType()->isPointerTy()) continue;
+                                if (!(llvm::isa<llvm::CallInst>(arg) || llvm::isa<llvm::LoadInst>(arg) || llvm::isa<llvm::CastInst>(arg))) continue;
                                 llvm::Type *pointedTy = arg->getType()->getPointerElementType();
-                                if (pointedTy->isAggregateType() ||  pointedTy->isVectorTy()) {
-                                    continue;
-                                }
+                                //if (pointedTy->isAggregateType() ||  pointedTy->isVectorTy()) {
+                                  //  continue;
+                                //}
                                 bool addToQuery = true;
                                 for (unsigned i = 0; i < DDAAliasSetSize.size(); i++) {
                                     if (DDAAliasSetSize[i].first == arg) {
@@ -229,6 +233,9 @@ public:
                                     }
                                 }
                                 if (addToQuery) {
+                                    //arg->dump();
+                                    NodeID ptrId = pag->getValueNode(arg);
+                                    addCandidate(ptrId); 
                                     DDAAliasSetSize.push_back(std::make_pair(arg, 0));
                                     AndersenAliasSetSize.push_back(std::make_pair(arg, 0));
                                 }
