@@ -4,8 +4,8 @@ dnl **************************************************************************
 AC_INIT([[[PTA]]],[[[1.0]]],[rockysui@gmail.com])
 
 dnl Identify where LLVM source tree is
-LLVM_SRC_ROOT="/home/ysui/llvm-3.8.0/llvm-3.8.0.src"
-LLVM_OBJ_ROOT="/home/ysui/llvm-3.8.0/llvm-3.8.0.obj"
+LLVM_SRC_ROOT="/home/peisen/LLVM/llvm3.6"
+LLVM_OBJ_ROOT="/home/peisen/LLVM/llvm3.6/build"
 
 dnl Tell autoconf that the auxilliary files are actually located in
 dnl the LLVM autoconf directory, not here.

@@ -37,7 +37,13 @@
 #include "WPA/WPAPass.h"
 #include "WPA/Andersen.h"
 #include "WPA/FlowSensitive.h"
+#include "WPA/DSNodeEquivs.h"
+#include "WPA/DataStructure.h"
+#include "WPA/DSGraph.h"
+
+
 #include <llvm/Support/CommandLine.h>
+
 
 using namespace llvm;
 
@@ -56,6 +62,7 @@ static cl::bits<PointerAnalysis::PTATY> PASelected(cl::desc("Select pointer anal
             clEnumValN(PointerAnalysis::AndersenWave_WPA, "wander", "Wave propagation inclusion-based analysis"),
             clEnumValN(PointerAnalysis::AndersenWaveDiff_WPA, "ander", "Diff wave propagation inclusion-based analysis"),
             clEnumValN(PointerAnalysis::FSSPARSE_WPA, "fspta", "Sparse flow sensitive pointer analysis"),
+            clEnumValN(PointerAnalysis::LLVMDSA_WPA, "dsa", "data structure analysis"),
             clEnumValEnd));
 
 
@@ -102,6 +109,7 @@ bool WPAPass::runOnModule(llvm::Module& module)
  */
 void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
 {
+    bool rundsa = false;
     /// Initialize pointer analysis.
     switch (kind) {
     case PointerAnalysis::Andersen_WPA:
@@ -116,12 +124,24 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
     case PointerAnalysis::AndersenWaveDiff_WPA:
         _pta = new AndersenWaveDiff();
         break;
+    case PointerAnalysis::LLVMDSA_WPA:
+        rundsa = true;
+        //_pta = new Andersen(); // TODO: we do not need to create this
+        break;
     case PointerAnalysis::FSSPARSE_WPA:
         _pta = new FlowSensitive();
         break;
     default:
         llvm::outs() << "This pointer analysis has not been implemented yet.\n";
         break;
+    }
+
+    if (rundsa) {
+        llvm::outs() << "Run Data Structure Analysis !!\n";
+        //TD = &getAnalysis<llvm::TDDataStructures>(); // TD seems slow??
+        BU = &getAnalysis<llvm::BUDataStructures>();
+        LO = &getAnalysis<llvm::LocalDataStructures>();
+        return;
     }
 
     ptaVector.push_back(_pta);
@@ -131,6 +151,7 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
         SVFG *svfg = memSSA.buildSVFG((BVDataPTAImpl*)_pta);
         svfg->dump("ander_svfg");
     }
+
 }
 
 

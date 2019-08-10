@@ -133,6 +133,7 @@ public:
 
     /// whether the node is in a cycle
     inline bool isInCycle(NodeID n) const {
+        //return false; // rainoftime:
         NodeID rep = repNode(n);
         // multi-node cycle
         if (subNodes(rep).count() > 1) {

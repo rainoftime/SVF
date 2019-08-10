@@ -40,7 +40,9 @@
 #include "MemoryModel/PointerAnalysis.h"
 #include <llvm/Analysis/AliasAnalysis.h>
 #include <llvm/Pass.h>
-
+#include "WPA/DSNodeEquivs.h" 
+#include "WPA/DataStructure.h"
+#include "WPA/DSGraph.h"
 
 /*!
  * Whole program pointer analysis.
@@ -68,7 +70,11 @@ public:
     virtual inline void getAnalysisUsage(llvm::AnalysisUsage &au) const {
         // declare your dependencies here.
         /// do not intend to change the IR in this pass,
-        au.setPreservesAll();
+        au.setPreservesAll(); 
+        //au.addRequiredTransitive<llvm::TDDataStructures>();
+        au.addRequiredTransitive<llvm::BUDataStructures>();
+        au.addRequiredTransitive<llvm::LocalDataStructures>();
+        au.addRequiredTransitive<llvm::DSNodeEquivs>();
     }
 
     /// Get adjusted analysis for alias analysis
@@ -98,6 +104,10 @@ private:
 
     PTAVector ptaVector;	///< all pointer analysis to be executed.
     PointerAnalysis* _pta;	///<  pointer analysis to be executed.
+    llvm::TDDataStructures *TD;
+    llvm::BUDataStructures *BU;
+    llvm::LocalDataStructures *LO; 
+    
 };
 
 
