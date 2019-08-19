@@ -1145,9 +1145,9 @@ bool GraphBuilder::visitIntrinsic(CallSite CS, Function *F) {
       if (!hasPtr)
         return true;
     }
-
+// 8.18: crash on firefox.bc..
     DEBUG(errs() << "[dsa:local] Unhandled intrinsic: " << F->getName() << "\n");
-    assert(0 && "Unhandled intrinsic");
+    //assert(0 && "Unhandled intrinsic");
     return false;
   }
   }

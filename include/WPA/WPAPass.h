@@ -67,7 +67,8 @@ public:
     ~WPAPass();
 
     /// LLVM analysis usage
-    virtual inline void getAnalysisUsage(llvm::AnalysisUsage &au) const {
+    void getAnalysisUsage(llvm::AnalysisUsage &) const;
+    /* {
         // declare your dependencies here.
         /// do not intend to change the IR in this pass,
         au.setPreservesAll(); 
@@ -75,7 +76,7 @@ public:
         au.addRequiredTransitive<llvm::BUDataStructures>();
         au.addRequiredTransitive<llvm::LocalDataStructures>();
         au.addRequiredTransitive<llvm::DSNodeEquivs>();
-    }
+    }*/
 
     /// Get adjusted analysis for alias analysis
     virtual inline void* getAdjustedAnalysisPointer(llvm::AnalysisID id) {

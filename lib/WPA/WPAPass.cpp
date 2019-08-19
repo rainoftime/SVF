@@ -75,6 +75,9 @@ static cl::bits<WPAPass::AliasCheckRule> AliasRule(cl::desc("Select alias check 
 cl::opt<bool> anderSVFG("svfg", cl::init(false),
                         cl::desc("Generate SVFG after Andersen's Analysis"));
 
+static cl::opt<string> DSAType("dsa-type",  cl::init("local"),
+                               cl::desc("Please specify the dsa passes to run: local, bu, td (bu covers local, and td covers local, bu)"));
+
 /*!
  * Destructor
  */
@@ -101,6 +104,30 @@ bool WPAPass::runOnModule(llvm::Module& module)
             runPointerAnalysis(module, i);
     }
     return false;
+}
+
+
+    /// LLVM analysis usage
+void WPAPass::getAnalysisUsage(llvm::AnalysisUsage &au) const {
+    // declare your dependencies here.
+    /// do not intend to change the IR in this pass,
+    au.setPreservesAll(); 
+    if (PASelected.isSet(PointerAnalysis::LLVMDSA_WPA)) {
+        if (DSAType == "local") {
+          std::cout << "Running DSA local!\n";
+          au.addRequiredTransitive<llvm::LocalDataStructures>();
+        } else if (DSAType == "bu") {
+          std::cout << "Running DSA local + bu!\n";
+          au.addRequiredTransitive<llvm::LocalDataStructures>();
+          au.addRequiredTransitive<llvm::BUDataStructures>();
+        } else if (DSAType == "td") {
+          std::cout << "Running DSA local + bu + td!\n";
+          au.addRequiredTransitive<llvm::LocalDataStructures>(); 
+          au.addRequiredTransitive<llvm::BUDataStructures>();
+          au.addRequiredTransitive<llvm::TDDataStructures>();
+        }
+        //au.addRequiredTransitive<llvm::DSNodeEquivs>();
+    }
 }
 
 
@@ -137,10 +164,10 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
     }
 
     if (rundsa) {
-        llvm::outs() << "Run Data Structure Analysis !!\n";
+        llvm::outs() << "Data Structure Analysis Finished !!\n";
         //TD = &getAnalysis<llvm::TDDataStructures>(); // TD seems slow??
-        BU = &getAnalysis<llvm::BUDataStructures>();
-        LO = &getAnalysis<llvm::LocalDataStructures>();
+        //BU = &getAnalysis<llvm::BUDataStructures>();
+        //LO = &getAnalysis<llvm::LocalDataStructures>();
         return;
     }
 
