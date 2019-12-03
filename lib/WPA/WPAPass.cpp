@@ -148,6 +148,8 @@ void WPAPass::runPointerAnalysis(llvm::Module& module, u32_t kind)
     case PointerAnalysis::LIVENESS_PTA:
         func_ptr_mode = true;
         _livepta = new LivenessPointsTo();
+        _livepta->runOnModule(module);
+        exit(0);
         break;
 
     default:

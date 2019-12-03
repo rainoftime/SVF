@@ -1453,7 +1453,8 @@ void LivenessPointsTo::runOnFunction(const Function *F, const CallString &CS, In
 
             if (!pointsToUnknown) {
                 for (const Function *Called : CalledFunctions) {
-                    if (!Called->isDeclaration()) {
+                    // TODO: handle vararg?
+                    if (!Called->isDeclaration() && !Called->isVarArg()) {
                         auto instruction_nonresult = nonresult.find(&*I);
                         assert (instruction_nonresult != nonresult.end());
                         auto instruction_ain = instruction_nonresult->second.second;
@@ -1570,8 +1571,10 @@ bool LivenessPointsTo::runOnFunctionAt(const CallString& CS,
 }
 
 void LivenessPointsTo::runOnModule(Module &M) {
+    llvm::outs() << "Running Liveness Based Alias Analysis (Unstable)\n";
     for (Function &F : M) {
         if (!F.isDeclaration()) {
+            //llvm::outs() << "Running ...\n";
             callData.clear();
             LivenessSet L;
             PointsToRelation R;
